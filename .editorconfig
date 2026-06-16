@@ -18,6 +18,12 @@ ktlint_standard = enabled
 # Standard ktlint would flag PascalCase Composable functions as violations.
 ktlint_standard_function-naming = disabled
 
+# The project package uses underscores (kmp_pocketbase) which is valid in KMP.
+ktlint_standard_package-name = disabled
+
+# Entry-point files are conventionally named main.kt in Kotlin JVM/Web projects.
+ktlint_standard_filename = disabled
+
 # Compose ruleset (io.nlopez.compose.rules:ktlint)
 # Rules are auto-enabled; configure allowed exceptions below.
 ktlint_compose_composable-annotation-naming = enabled
