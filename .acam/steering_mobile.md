@@ -321,7 +321,7 @@ Every AI agent or human developer must follow these rules before modifying any f
    file naming, or libraries to use
 6. **Consult the corresponding skill** before implementing a presentation pattern,
    network client, or persistence mechanism
-
+command v no funcion
 ---
 
 ## 7. What This Document Does NOT Define

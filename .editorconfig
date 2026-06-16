@@ -1,0 +1,40 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[*.{kt,kts}]
+indent_size = 4
+max_line_length = 120
+
+# ktlint standard ruleset
+ktlint_standard = enabled
+
+# Delegate function naming for @Composable functions to compose ruleset.
+# Standard ktlint would flag PascalCase Composable functions as violations.
+ktlint_standard_function-naming = disabled
+
+# Compose ruleset (io.nlopez.compose.rules:ktlint)
+# Rules are auto-enabled; configure allowed exceptions below.
+ktlint_compose_composable-annotation-naming = enabled
+ktlint_compose_composable-function-name = enabled
+ktlint_compose_content-slot-reused = enabled
+ktlint_compose_modifier-missing = enabled
+ktlint_compose_modifier-reused = enabled
+ktlint_compose_mutable-state-flow = enabled
+ktlint_compose_preview-annotation-naming = enabled
+ktlint_compose_remember-missing = enabled
+ktlint_compose_vm-injection-check = disabled  # ViewModel injection pattern varies per project
+
+# Composition locals that are allowed without explicit allowlist violations
+ktlint_compose_allowed-composition-locals = LocalContext,LocalLifecycleOwner,LocalInspectionMode
+
+[*.xml]
+indent_size = 4
+
+[*.json]
+indent_size = 2
