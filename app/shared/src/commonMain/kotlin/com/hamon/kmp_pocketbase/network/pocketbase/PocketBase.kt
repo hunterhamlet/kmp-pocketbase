@@ -4,12 +4,14 @@ import com.hamon.kmp_pocketbase.network.createHttpClient
 
 class PocketBase(
     private val baseUrl: String,
-    enableLogging: Boolean = false,
+    logLevel: PocketBaseLogLevel = PocketBaseLogLevel.NONE,
+    logger: PocketBaseLogger = PocketBaseLogger.Default,
 ) {
     val authStore: AuthStore = AuthStore()
 
-    private val client = createHttpClient(enableLogging)
+    private val client = createHttpClient()
     private val normalizedBaseUrl = baseUrl.trimEnd('/')
+    private val log = PocketBaseLog(logLevel, logger)
     private val services = mutableMapOf<String, RecordService>()
 
     fun collection(name: String): RecordService =
@@ -19,6 +21,7 @@ class PocketBase(
                 baseUrl = normalizedBaseUrl,
                 collectionName = name,
                 authStore = authStore,
+                log = log,
             )
         }
 }

@@ -11,6 +11,8 @@ import io.ktor.client.request.header
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import kotlinx.serialization.json.JsonObject
@@ -22,6 +24,7 @@ class RecordService internal constructor(
     private val baseUrl: String,
     private val collectionName: String,
     private val authStore: AuthStore,
+    private val log: PocketBaseLog,
 ) {
     private val baseRecordsUrl get() = "$baseUrl/api/collections/$collectionName/records"
 
@@ -36,7 +39,7 @@ class RecordService internal constructor(
                     parameters.append("perPage", perPage.toString())
                 }
                 authStore.token?.let { header("Authorization", it) }
-            }.body()
+            }.logAndDecode()
 
     suspend fun getFullList(perPage: Int = 200): List<RecordModel> {
         val results = mutableListOf<RecordModel>()
@@ -54,7 +57,7 @@ class RecordService internal constructor(
         client
             .get("$baseRecordsUrl/$id") {
                 authStore.token?.let { header("Authorization", it) }
-            }.body()
+            }.logAndDecode()
 
     suspend fun create(body: JsonObject): RecordModel =
         client
@@ -62,7 +65,7 @@ class RecordService internal constructor(
                 contentType(ContentType.Application.Json)
                 setBody(body)
                 authStore.token?.let { header("Authorization", it) }
-            }.body()
+            }.logAndDecode(requestBody = body.toString())
 
     suspend fun update(
         id: String,
@@ -73,11 +76,26 @@ class RecordService internal constructor(
                 contentType(ContentType.Application.Json)
                 setBody(body)
                 authStore.token?.let { header("Authorization", it) }
-            }.body()
+            }.logAndDecode(requestBody = body.toString())
 
     suspend fun delete(id: String) {
-        client.delete("$baseRecordsUrl/$id") {
-            authStore.token?.let { header("Authorization", it) }
+        val response =
+            client.delete("$baseRecordsUrl/$id") {
+                authStore.token?.let { header("Authorization", it) }
+            }
+        if (log.isEnabled()) {
+            log.log(
+                url =
+                    response.call.request.url
+                        .toString(),
+                collection = collectionName,
+                token = authStore.token,
+                requestHeaders = response.requestHeadersMap(),
+                requestBody = null,
+                status = "${response.status.value} ${response.status.description}",
+                responseHeaders = response.responseHeadersMap(),
+                responseBody = response.bodyAsText().ifEmpty { "(empty)" },
+            )
         }
     }
 
@@ -96,8 +114,42 @@ class RecordService internal constructor(
                 .post(authUrl) {
                     contentType(ContentType.Application.Json)
                     setBody(payload)
-                }.body()
+                }.logAndDecode(requestBody = payload.toString())
         authStore.save(response.token, response.record)
         return response
     }
+
+    private suspend inline fun <reified T> HttpResponse.logAndDecode(requestBody: String? = null): T {
+        if (!log.isEnabled()) return body()
+        val text = bodyAsText()
+        log.log(
+            url = call.request.url.toString(),
+            collection = collectionName,
+            token = authStore.token,
+            requestHeaders = requestHeadersMap(),
+            requestBody = requestBody,
+            status = "${status.value} ${status.description}",
+            responseHeaders = responseHeadersMap(),
+            responseBody = text,
+        )
+        return pocketBaseJson.decodeFromString(text)
+    }
+
+    private fun HttpResponse.requestHeadersMap(): Map<String, String>? =
+        if (log.level >= PocketBaseLogLevel.HEADERS) {
+            call.request.headers
+                .entries()
+                .associate { entry -> entry.key to entry.value.joinToString(", ") }
+        } else {
+            null
+        }
+
+    private fun HttpResponse.responseHeadersMap(): Map<String, String>? =
+        if (log.level >= PocketBaseLogLevel.HEADERS) {
+            headers
+                .entries()
+                .associate { entry -> entry.key to entry.value.joinToString(", ") }
+        } else {
+            null
+        }
 }
