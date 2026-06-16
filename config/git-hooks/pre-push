@@ -1,0 +1,8 @@
+#!/bin/sh
+set -e
+
+echo "🔍 ktlintCheck..."
+./gradlew ktlintCheck --daemon -q
+echo "🔍 detekt..."
+./gradlew detekt --daemon -q
+echo "✅ Checks passed. Pushing..."

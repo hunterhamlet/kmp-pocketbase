@@ -40,4 +40,26 @@ subprojects {
             include("**/*.kt", "**/*.kts")
         }
     }
+
+    // Wire detekt into the standard `check` lifecycle.
+    // ktlint-gradle already does this for ktlintCheck automatically.
+    tasks.matching { it.name == "check" }.configureEach {
+        dependsOn("detekt")
+    }
+
+    // Auto-install git hooks for every developer on their first build.
+    tasks.matching { it.name == "build" }.configureEach {
+        dependsOn(rootProject.tasks.named("installGitHooks"))
+    }
+}
+
+// Evaluated at configuration time: compatible with configuration cache
+val gitHooksDirExists = file(".git/hooks").isDirectory
+
+tasks.register<Copy>("installGitHooks") {
+    description = "Copia los hooks de config/git-hooks/ a .git/hooks/ con permisos de ejecución."
+    enabled = gitHooksDirExists
+    from(file("config/git-hooks/"))
+    into(file(".git/hooks/"))
+    filePermissions { unix("rwxr-xr-x") }
 }
