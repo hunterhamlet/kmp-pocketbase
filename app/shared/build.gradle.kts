@@ -75,6 +75,8 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation(libs.ktor.clientMock)
+            implementation(libs.kotlinx.coroutinesTest)
         }
         androidMain.dependencies {
             implementation(libs.ktor.clientOkHttp)
