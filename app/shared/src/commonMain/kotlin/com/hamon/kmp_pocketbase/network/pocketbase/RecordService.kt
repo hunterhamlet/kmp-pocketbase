@@ -31,21 +31,30 @@ class RecordService internal constructor(
     suspend fun getList(
         page: Int = 1,
         perPage: Int = 30,
+        query: QueryParams? = null,
     ): ResultList =
         client
             .get(baseRecordsUrl) {
                 url {
                     parameters.append("page", page.toString())
                     parameters.append("perPage", perPage.toString())
+                    query?.filter?.let { parameters.append("filter", it) }
+                    query?.sort?.let { parameters.append("sort", it) }
+                    query?.expand?.let { parameters.append("expand", it) }
+                    query?.fields?.let { parameters.append("fields", it) }
+                    if (query?.skipTotal == true) parameters.append("skipTotal", "1")
                 }
                 authStore.token?.let { header("Authorization", it) }
             }.logAndDecode()
 
-    suspend fun getFullList(perPage: Int = 200): List<RecordModel> {
+    suspend fun getFullList(
+        perPage: Int = 200,
+        query: QueryParams? = null,
+    ): List<RecordModel> {
         val results = mutableListOf<RecordModel>()
         var page = 1
         while (true) {
-            val batch = getList(page = page, perPage = perPage)
+            val batch = getList(page = page, perPage = perPage, query = query)
             results.addAll(batch.items)
             if (page >= batch.totalPages) break
             page++
@@ -53,9 +62,17 @@ class RecordService internal constructor(
         return results
     }
 
-    suspend fun getOne(id: String): RecordModel =
+    suspend fun getOne(
+        id: String,
+        expand: String? = null,
+        fields: String? = null,
+    ): RecordModel =
         client
             .get("$baseRecordsUrl/$id") {
+                url {
+                    expand?.let { parameters.append("expand", it) }
+                    fields?.let { parameters.append("fields", it) }
+                }
                 authStore.token?.let { header("Authorization", it) }
             }.logAndDecode()
 
