@@ -7,7 +7,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinSerialization)
-    jacoco
+    alias(libs.plugins.kover)
 }
 
 kotlin {
@@ -103,73 +103,32 @@ dependencies {
     androidRuntimeClasspath(libs.compose.uiTooling)
 }
 
-jacoco {
-    toolVersion = "0.8.12"
-}
-
-private val excludedClasses =
-    listOf(
-        "**/AppKt.class",
-        "**/ComposableSingletons\$AppKt.class",
-        "**/Greeting.class",
-        "**/JVMPlatform.class",
-        "**/Platform_jvmKt.class",
-        "**/HttpClientFactoryKt.class",
-        "**/HttpClientFactory_jvmKt.class",
-        "**/PocketBase.class",
-        "**/PocketBase\$*.class",
-        "**/generated/resources/**",
-        "**/realtime/SubscribeRequest.class",
-        "**/realtime/SubscribeRequest\$Companion.class",
-        "**/*\$1.class",
-        "**/*\$2.class",
-        "**/*\$3.class",
-        "**/*\$4.class",
-        "**/*\$5.class",
-    )
-
-val jacocoExecFile = layout.buildDirectory.file("jacoco/jvmTest.exec")
-
-tasks.register<JacocoReport>("jacocoReport") {
-    group = "verification"
-    dependsOn("jvmTest")
-    executionData.setFrom(jacocoExecFile)
-    sourceDirectories.setFrom(
-        files(
-            "src/commonMain/kotlin",
-            "src/jvmMain/kotlin",
-        ),
-    )
-    classDirectories.setFrom(
-        fileTree(layout.buildDirectory.dir("classes/kotlin/jvm/main")) {
-            exclude(excludedClasses)
-        },
-    )
+kover {
     reports {
-        xml.required.set(true)
-        html.required.set(true)
-    }
-}
-
-tasks.register<JacocoCoverageVerification>("jacocoVerify") {
-    group = "verification"
-    dependsOn("jacocoReport")
-    executionData.setFrom(jacocoExecFile)
-    sourceDirectories.setFrom(
-        files(
-            "src/commonMain/kotlin",
-            "src/jvmMain/kotlin",
-        ),
-    )
-    classDirectories.setFrom(
-        fileTree(layout.buildDirectory.dir("classes/kotlin/jvm/main")) {
-            exclude(excludedClasses)
-        },
-    )
-    violationRules {
-        rule {
-            limit {
-                minimum = "0.80".toBigDecimal()
+        filters {
+            excludes {
+                classes(
+                    "*.AppKt",
+                    "*.ComposableSingletons*",
+                    "*.Greeting",
+                    "*.JVMPlatform",
+                    "*.Platform_jvmKt",
+                    "*.HttpClientFactoryKt",
+                    "*.HttpClientFactory_jvmKt",
+                    "*.PocketBase",
+                    "*.PocketBase\$*",
+                    "*.realtime.SubscribeRequest",
+                    "*.realtime.SubscribeRequest\$Companion",
+                )
+                annotatedBy("*.Generated")
+                packages("*.generated.*")
+            }
+        }
+        total {
+            verify {
+                rule {
+                    minBound(80)
+                }
             }
         }
     }
