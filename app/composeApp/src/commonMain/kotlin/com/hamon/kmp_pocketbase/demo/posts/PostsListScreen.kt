@@ -41,6 +41,7 @@ internal fun PostsListScreen(
     val pb = PocketBaseProvider.instance
     val vm = viewModel { PostsViewModel(PocketBasePostsRepository(pb)) }
 
+    LaunchedEffect(Unit) { vm.loadPosts() }
     LaunchedEffect(vm.actionState) {
         if (vm.actionState is PostActionState.Done) vm.resetActionState()
     }

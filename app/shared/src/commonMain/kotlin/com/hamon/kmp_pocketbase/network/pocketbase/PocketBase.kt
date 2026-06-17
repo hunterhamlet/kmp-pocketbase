@@ -32,8 +32,10 @@ class PocketBase(
     private val realtime = RealtimeService(client, normalizedBaseUrl, authStore)
     private val services = mutableMapOf<String, RecordService>()
 
-    init {
-        scope.launch { authStore.restore() }
+    private val restoreJob = scope.launch { authStore.restore() }
+
+    suspend fun awaitReady() {
+        restoreJob.join()
     }
 
     fun collection(name: String): RecordService =

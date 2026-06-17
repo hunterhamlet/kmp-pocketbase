@@ -2,6 +2,7 @@ package com.hamon.kmp_pocketbase
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -10,17 +11,29 @@ import androidx.compose.runtime.setValue
 import com.hamon.kmp_pocketbase.demo.PocketBaseProvider
 import com.hamon.kmp_pocketbase.demo.Screen
 import com.hamon.kmp_pocketbase.demo.auth.AuthScreen
+import com.hamon.kmp_pocketbase.demo.auth.UserRecord
 import com.hamon.kmp_pocketbase.demo.chat.ChatScreen
 import com.hamon.kmp_pocketbase.demo.posts.PostFormScreen
 import com.hamon.kmp_pocketbase.demo.posts.PostsListScreen
+import com.hamon.kmp_pocketbase.network.pocketbase.PocketBaseResult
 import kotlinx.coroutines.launch
 
 @Composable
 fun App() {
     val pb = PocketBaseProvider.instance
     val scope = rememberCoroutineScope()
-    var currentScreen by remember {
-        mutableStateOf<Screen>(if (pb.authStore.isValid) Screen.Posts else Screen.Auth)
+    var currentScreen by remember { mutableStateOf<Screen>(Screen.Auth) }
+
+    LaunchedEffect(Unit) {
+        pb.awaitReady()
+        if (pb.authStore.isValid) {
+            val result = pb.collection("users").tryAuthRefresh<UserRecord>()
+            if (result is PocketBaseResult.Success) {
+                currentScreen = Screen.Posts
+            } else {
+                pb.authStore.clear()
+            }
+        }
     }
 
     MaterialTheme {
