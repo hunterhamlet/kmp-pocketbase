@@ -594,4 +594,113 @@ class RecordServiceTest {
         val engine = MockEngine { respond("", HttpStatusCode.OK, headersOf()) }
         assertNotNull(service(engine).subscribe<TestRecord>("r1"))
     }
+
+    // authRefresh tests
+
+    private val authRefreshJson =
+        """{"token":"refreshed-tok","record":$recordJson}"""
+
+    @Test
+    fun authRefreshSavesNewTokenInAuthStore() =
+        runTest {
+            val engine = MockEngine { respond(authRefreshJson, HttpStatusCode.OK, jsonHeaders()) }
+            val authStore = AuthStore(InMemoryTokenStorage())
+            service(engine, authStore).authRefresh<TestRecord>()
+            assertEquals("refreshed-tok", authStore.token)
+            assertTrue(authStore.isValid)
+        }
+
+    @Test
+    fun authRefreshPersistsNewTokenInStorage() =
+        runTest {
+            val storage = InMemoryTokenStorage()
+            val engine = MockEngine { respond(authRefreshJson, HttpStatusCode.OK, jsonHeaders()) }
+            service(engine, AuthStore(storage)).authRefresh<TestRecord>()
+            val restored = AuthStore(storage)
+            restored.restore()
+            assertEquals("refreshed-tok", restored.token)
+        }
+
+    @Test
+    fun authRefreshReturnsNewTokenAndRecord() =
+        runTest {
+            val engine = MockEngine { respond(authRefreshJson, HttpStatusCode.OK, jsonHeaders()) }
+            val auth = service(engine).authRefresh<TestRecord>()
+            assertEquals("refreshed-tok", auth.token)
+            assertEquals("r1", auth.record.id)
+        }
+
+    @Test
+    fun authRefreshSendsExpandParam() =
+        runTest {
+            var expand: String? = null
+            val engine =
+                MockEngine { request ->
+                    expand = request.url.parameters["expand"]
+                    respond(authRefreshJson, HttpStatusCode.OK, jsonHeaders())
+                }
+            service(engine).authRefresh<TestRecord>(expand = "profile")
+            assertEquals("profile", expand)
+        }
+
+    @Test
+    fun authRefreshSendsFieldsParam() =
+        runTest {
+            var fields: String? = null
+            val engine =
+                MockEngine { request ->
+                    fields = request.url.parameters["fields"]
+                    respond(authRefreshJson, HttpStatusCode.OK, jsonHeaders())
+                }
+            service(engine).authRefresh<TestRecord>(fields = "id,email")
+            assertEquals("id,email", fields)
+        }
+
+    @Test
+    fun authRefreshSendsAuthorizationHeaderWhenTokenPresent() =
+        runTest {
+            var authHeader: String? = null
+            val engine =
+                MockEngine { request ->
+                    authHeader = request.headers[HttpHeaders.Authorization]
+                    respond(authRefreshJson, HttpStatusCode.OK, jsonHeaders())
+                }
+            val authStore = AuthStore(InMemoryTokenStorage())
+            authStore.save("existing-tok", RecordModel(fields = TestRecord()))
+            service(engine, authStore).authRefresh<TestRecord>()
+            assertEquals("existing-tok", authHeader)
+        }
+
+    @Test
+    fun authRefreshSendsNoAuthHeaderWhenNoToken() =
+        runTest {
+            var authHeader: String? = "sentinel"
+            val engine =
+                MockEngine { request ->
+                    authHeader = request.headers[HttpHeaders.Authorization]
+                    respond(authRefreshJson, HttpStatusCode.OK, jsonHeaders())
+                }
+            service(engine).authRefresh<TestRecord>()
+            assertNull(authHeader)
+        }
+
+    @Test
+    fun tryAuthRefreshReturnsSuccessWithNewToken() =
+        runTest {
+            val engine = MockEngine { respond(authRefreshJson, HttpStatusCode.OK, jsonHeaders()) }
+            val auth =
+                service(engine).tryAuthRefresh<TestRecord>().getOrNull()
+                    ?: fail("expected success")
+            assertEquals("refreshed-tok", auth.token)
+            assertEquals("r1", auth.record.id)
+        }
+
+    @Test
+    fun tryAuthRefreshReturnsFailureOnNetworkError() =
+        runTest {
+            val engine = MockEngine { throw RuntimeException("network error") }
+            val result = service(engine).tryAuthRefresh<TestRecord>()
+            assertIs<PocketBaseResult.Failure>(result)
+            assertNotNull(result.exceptionOrNull())
+        }
 }
