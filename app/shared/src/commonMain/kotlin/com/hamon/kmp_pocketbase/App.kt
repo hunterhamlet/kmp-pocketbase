@@ -18,8 +18,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import kmp_pocketbase.app.shared.generated.resources.Res
-import kmp_pocketbase.app.shared.generated.resources.compose_multiplatform
+import com.hamon.shared.generated.resources.Res
+import com.hamon.shared.generated.resources.compose_multiplatform
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
