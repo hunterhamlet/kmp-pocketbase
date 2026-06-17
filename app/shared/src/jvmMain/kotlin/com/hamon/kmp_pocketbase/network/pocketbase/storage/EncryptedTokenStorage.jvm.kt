@@ -5,16 +5,16 @@ import eu.anifantakis.lib.ksafe.KSafe
 internal actual class EncryptedTokenStorage actual constructor() : TokenStorage {
     private val ksafe = KSafe()
 
-    override suspend fun save(token: String) {
+    actual override suspend fun save(token: String) {
         ksafe.put(TOKEN_KEY, token)
     }
 
-    override suspend fun load(): String? {
+    actual override suspend fun load(): String? {
         val value: String = ksafe.get(TOKEN_KEY, "")
         return value.ifEmpty { null }
     }
 
-    override suspend fun clear() {
+    actual override suspend fun clear() {
         ksafe.delete(TOKEN_KEY)
     }
 
