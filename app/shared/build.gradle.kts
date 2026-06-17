@@ -4,8 +4,6 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidMultiplatformLibrary)
-    alias(libs.plugins.composeMultiplatform)
-    alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.kover)
     `maven-publish`
@@ -14,24 +12,13 @@ plugins {
 group = "com.hamon"
 version = "0.1.0"
 
-compose.resources {
-    packageOfResClass = "com.hamon.shared.generated.resources"
-}
-
 kotlin {
     compilerOptions {
         freeCompilerArgs.add("-Xexpect-actual-classes")
     }
 
-    listOf(
-        iosArm64(),
-        iosSimulatorArm64(),
-    ).forEach { iosTarget ->
-        iosTarget.binaries.framework {
-            baseName = "Shared"
-            isStatic = true
-        }
-    }
+    iosArm64()
+    iosSimulatorArm64()
 
     jvm()
 
@@ -46,41 +33,17 @@ kotlin {
 
     androidLibrary {
         namespace = "com.hamon.kmp_pocketbase.app.shared"
-        compileSdk =
-            libs.versions.android.compileSdk
-                .get()
-                .toInt()
-        minSdk =
-            libs.versions.android.minSdk
-                .get()
-                .toInt()
-
+        compileSdk = libs.versions.android.compileSdk.get().toInt()
+        minSdk = libs.versions.android.minSdk.get().toInt()
         compilerOptions {
             jvmTarget = JvmTarget.JVM_11
-        }
-        androidResources {
-            enable = true
-        }
-        withHostTest {
-            isIncludeAndroidResources = true
         }
     }
 
     sourceSets {
-        androidMain.dependencies {
-            implementation(libs.compose.uiToolingPreview)
-        }
         commonMain.dependencies {
             api(projects.core)
             implementation(libs.ksafe)
-            implementation(libs.compose.runtime)
-            implementation(libs.compose.foundation)
-            implementation(libs.compose.material3)
-            implementation(libs.compose.ui)
-            implementation(libs.compose.components.resources)
-            implementation(libs.compose.uiToolingPreview)
-            implementation(libs.androidx.lifecycle.viewmodelCompose)
-            implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(libs.ktor.clientCore)
             implementation(libs.ktor.clientContentNegotiation)
             implementation(libs.ktor.clientLogging)
@@ -103,7 +66,6 @@ kotlin {
             implementation(libs.ktor.clientCio)
         }
         jsMain.dependencies {
-            implementation(libs.wrappers.browser)
             implementation(libs.ktor.clientJs)
         }
         wasmJsMain.dependencies {
@@ -112,20 +74,11 @@ kotlin {
     }
 }
 
-dependencies {
-    androidRuntimeClasspath(libs.compose.uiTooling)
-}
-
 kover {
     reports {
         filters {
             excludes {
                 classes(
-                    "*.AppKt",
-                    "*.ComposableSingletons*",
-                    "*.Greeting",
-                    "*.JVMPlatform",
-                    "*.Platform_jvmKt",
                     "*.HttpClientFactoryKt",
                     "*.HttpClientFactory_jvmKt",
                     "*.PocketBase",
