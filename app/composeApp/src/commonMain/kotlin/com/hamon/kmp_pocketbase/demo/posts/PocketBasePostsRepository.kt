@@ -6,7 +6,7 @@ import com.hamon.kmp_pocketbase.network.pocketbase.dto.RecordModel
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
-internal class PocketBasePostsRepository(pb: PocketBase) : PostsRepository {
+internal class PocketBasePostsRepository(private val pb: PocketBase) : PostsRepository {
     private val service = pb.collection("posts")
 
     override suspend fun getPosts(): PocketBaseResult<List<RecordModel<Post>>> =
@@ -17,6 +17,7 @@ internal class PocketBasePostsRepository(pb: PocketBase) : PostsRepository {
             buildJsonObject {
                 put("title", title)
                 put("content", content)
+                put("author", pb.authStore.model?.id ?: "")
             },
         )
 
@@ -30,6 +31,7 @@ internal class PocketBasePostsRepository(pb: PocketBase) : PostsRepository {
             buildJsonObject {
                 put("title", title)
                 put("content", content)
+                put("author", pb.authStore.model?.id ?: "")
             },
         )
 

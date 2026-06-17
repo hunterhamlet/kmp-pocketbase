@@ -21,7 +21,6 @@ internal class ChatViewModel(private val repo: ChatRepository) : ViewModel() {
     var uiState by mutableStateOf<ChatUiState>(ChatUiState.Loading)
         private set
     var messageInput by mutableStateOf("")
-    var authorInput by mutableStateOf("")
 
     init {
         loadAndSubscribe()
@@ -53,11 +52,10 @@ internal class ChatViewModel(private val repo: ChatRepository) : ViewModel() {
 
     fun sendMessage() {
         val text = messageInput.trim()
-        val author = authorInput.trim()
-        if (text.isEmpty() || author.isEmpty()) return
+        if (text.isEmpty()) return
         viewModelScope.launch {
-            repo.sendMessage(text, author)
+            repo.sendMessage(text)
                 .onSuccess { messageInput = "" }
-            }
+        }
     }
 }

@@ -7,6 +7,6 @@ import kotlinx.coroutines.flow.Flow
 
 internal interface ChatRepository {
     fun subscribeToMessages(): Flow<PocketBaseResult<RealtimeEvent<Message>>>
-    suspend fun sendMessage(text: String, author: String): PocketBaseResult<RecordModel<Message>>
+    suspend fun sendMessage(text: String): PocketBaseResult<RecordModel<Message>>
     suspend fun getRecentMessages(): PocketBaseResult<List<RecordModel<Message>>>
 }

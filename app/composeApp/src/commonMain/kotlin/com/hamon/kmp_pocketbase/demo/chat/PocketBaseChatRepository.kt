@@ -8,17 +8,17 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
-internal class PocketBaseChatRepository(pb: PocketBase) : ChatRepository {
+internal class PocketBaseChatRepository(private val pb: PocketBase) : ChatRepository {
     private val service = pb.collection("messages")
 
     override fun subscribeToMessages(): Flow<PocketBaseResult<RealtimeEvent<Message>>> =
         service.subscribe<Message>(autoReconnect = true)
 
-    override suspend fun sendMessage(text: String, author: String): PocketBaseResult<RecordModel<Message>> =
+    override suspend fun sendMessage(text: String): PocketBaseResult<RecordModel<Message>> =
         service.tryCreate(
             buildJsonObject {
                 put("text", text)
-                put("author", author)
+                put("author", pb.authStore.model?.id ?: "")
             },
         )
 
