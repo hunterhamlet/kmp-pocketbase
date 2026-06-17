@@ -1,58 +1,55 @@
 package com.hamon.kmp_pocketbase
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.hamon.composeapp.generated.resources.Res
-import com.hamon.composeapp.generated.resources.compose_multiplatform
-import org.jetbrains.compose.resources.painterResource
+import com.hamon.kmp_pocketbase.demo.PocketBaseProvider
+import com.hamon.kmp_pocketbase.demo.Screen
+import com.hamon.kmp_pocketbase.demo.auth.AuthScreen
+import com.hamon.kmp_pocketbase.demo.chat.ChatScreen
+import com.hamon.kmp_pocketbase.demo.posts.PostFormScreen
+import com.hamon.kmp_pocketbase.demo.posts.PostsListScreen
+import kotlinx.coroutines.launch
 
 @Composable
-fun App(modifier: Modifier = Modifier) {
+fun App() {
+    val pb = PocketBaseProvider.instance
+    val scope = rememberCoroutineScope()
+    var currentScreen by remember {
+        mutableStateOf<Screen>(if (pb.authStore.isValid) Screen.Posts else Screen.Auth)
+    }
+
     MaterialTheme {
-        var showContent by remember { mutableStateOf(false) }
-        Column(
-            modifier =
-                modifier
-                    .background(MaterialTheme.colorScheme.primaryContainer)
-                    .safeContentPadding()
-                    .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Button(onClick = { showContent = !showContent }) {
-                Text("Click me!")
-            }
-            AnimatedVisibility(showContent) {
-                val greeting = remember { Greeting().greet() }
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Image(painterResource(Res.drawable.compose_multiplatform), null)
-                    Text("Compose: $greeting")
-                }
-            }
+        when (val screen = currentScreen) {
+            Screen.Auth -> AuthScreen(
+                onAuthenticated = { currentScreen = Screen.Posts },
+            )
+            Screen.Posts -> PostsListScreen(
+                onCreatePost = { currentScreen = Screen.CreatePost },
+                onEditPost = { currentScreen = Screen.EditPost(it) },
+                onChat = { currentScreen = Screen.Chat },
+                onLogout = {
+                    scope.launch { pb.authStore.clear() }
+                    currentScreen = Screen.Auth
+                },
+            )
+            Screen.CreatePost -> PostFormScreen(
+                post = null,
+                onSaved = { currentScreen = Screen.Posts },
+                onBack = { currentScreen = Screen.Posts },
+            )
+            is Screen.EditPost -> PostFormScreen(
+                post = screen.post,
+                onSaved = { currentScreen = Screen.Posts },
+                onBack = { currentScreen = Screen.Posts },
+            )
+            Screen.Chat -> ChatScreen(
+                onBack = { currentScreen = Screen.Posts },
+            )
         }
     }
-}
-
-@Preview
-@Composable
-private fun AppPreview() {
-    App()
 }

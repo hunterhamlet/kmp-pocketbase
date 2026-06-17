@@ -1,0 +1,38 @@
+package com.hamon.kmp_pocketbase.demo.posts
+
+import com.hamon.kmp_pocketbase.network.pocketbase.PocketBase
+import com.hamon.kmp_pocketbase.network.pocketbase.PocketBaseResult
+import com.hamon.kmp_pocketbase.network.pocketbase.dto.RecordModel
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+
+internal class PocketBasePostsRepository(pb: PocketBase) : PostsRepository {
+    private val service = pb.collection("posts")
+
+    override suspend fun getPosts(): PocketBaseResult<List<RecordModel<Post>>> =
+        service.tryGetFullList()
+
+    override suspend fun createPost(title: String, content: String): PocketBaseResult<RecordModel<Post>> =
+        service.tryCreate(
+            buildJsonObject {
+                put("title", title)
+                put("content", content)
+            },
+        )
+
+    override suspend fun updatePost(
+        id: String,
+        title: String,
+        content: String,
+    ): PocketBaseResult<RecordModel<Post>> =
+        service.tryUpdate(
+            id,
+            buildJsonObject {
+                put("title", title)
+                put("content", content)
+            },
+        )
+
+    override suspend fun deletePost(id: String): PocketBaseResult<Unit> =
+        service.tryDelete(id)
+}

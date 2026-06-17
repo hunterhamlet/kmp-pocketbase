@@ -1,3 +1,4 @@
+import java.util.Properties
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
@@ -10,6 +11,34 @@ plugins {
 
 compose.resources {
     packageOfResClass = "com.hamon.composeapp.generated.resources"
+}
+
+val localProps = Properties().apply {
+    rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
+}
+val pocketbaseUrl: String = localProps.getProperty(
+    "pocketbase.url",
+    "https://pocketbase-library-demo.pockethost.io",
+)
+
+val generateAppConfig by tasks.registering {
+    val outDir = layout.buildDirectory.dir("generated/appconfig/commonMain/kotlin")
+    val url = pocketbaseUrl
+    outputs.dir(outDir)
+    inputs.property("pocketbaseUrl", url)
+    doLast {
+        val file = outDir.get().file("com/hamon/kmp_pocketbase/demo/AppConfig.kt").asFile
+        file.parentFile.mkdirs()
+        file.writeText(
+            """
+package com.hamon.kmp_pocketbase.demo
+
+internal object AppConfig {
+    const val POCKETBASE_URL = "$url"
+}
+""".trimIndent(),
+        )
+    }
 }
 
 kotlin {
@@ -55,22 +84,31 @@ kotlin {
     }
 
     sourceSets {
-        commonMain.dependencies {
-            api(projects.app.shared)
-            implementation(libs.compose.runtime)
-            implementation(libs.compose.foundation)
-            implementation(libs.compose.material3)
-            implementation(libs.compose.ui)
-            implementation(libs.compose.components.resources)
-            implementation(libs.compose.uiToolingPreview)
-            implementation(libs.androidx.lifecycle.viewmodelCompose)
-            implementation(libs.androidx.lifecycle.runtimeCompose)
+        commonMain {
+            kotlin.srcDir(
+                generateAppConfig.map {
+                    layout.buildDirectory.dir("generated/appconfig/commonMain/kotlin")
+                },
+            )
+            dependencies {
+                api(projects.app.shared)
+                implementation(libs.kotlinx.serializationJson)
+                implementation(libs.compose.runtime)
+                implementation(libs.compose.foundation)
+                implementation(libs.compose.material3)
+                implementation(libs.compose.ui)
+                implementation(libs.compose.components.resources)
+                implementation(libs.compose.uiToolingPreview)
+                implementation(libs.androidx.lifecycle.viewmodelCompose)
+                implementation(libs.androidx.lifecycle.runtimeCompose)
+            }
         }
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutinesTest)
         }
         jsMain.dependencies {
             implementation(libs.wrappers.browser)
