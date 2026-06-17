@@ -16,6 +16,22 @@ The same API works identically across all platforms. No platform-specific code r
 
 ---
 
+## Prerequisites
+
+Your module must apply the **Kotlin Serialization Gradle plugin**. This is required because the SDK uses `@Serializable` generics — the compiler plugin generates serializers at compile time in *your* module, and cannot be bundled inside the library.
+
+```kotlin
+// build.gradle.kts
+plugins {
+    kotlin("multiplatform") // or kotlin("android"), kotlin("jvm"), etc.
+    kotlin("plugin.serialization") version "2.1.21"
+}
+```
+
+The runtime (`kotlinx-serialization-json`) is included transitively — no need to add it yourself.
+
+---
+
 ## Installation
 
 GitHub Packages requires authentication even for public packages. Add your credentials to `~/.gradle/gradle.properties`:
