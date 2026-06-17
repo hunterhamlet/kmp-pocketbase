@@ -8,7 +8,11 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.kover)
+    `maven-publish`
 }
+
+group = "com.hamon"
+version = "0.1.0"
 
 kotlin {
     compilerOptions {
@@ -137,6 +141,24 @@ kover {
                     minBound(70)
                 }
             }
+        }
+    }
+}
+
+afterEvaluate {
+    publishing {
+        repositories {
+            maven {
+                name = "GitHubPackages"
+                url = uri("https://maven.pkg.github.com/hunterhamlet/kmp-pocketbase")
+                credentials {
+                    username = System.getenv("GITHUB_ACTOR")
+                    password = System.getenv("GITHUB_TOKEN")
+                }
+            }
+        }
+        publications.withType<MavenPublication> {
+            artifactId = artifactId.replace("shared", "kmp-pocketbase")
         }
     }
 }
