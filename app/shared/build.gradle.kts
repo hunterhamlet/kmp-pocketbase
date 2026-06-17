@@ -14,6 +14,10 @@ plugins {
 group = "com.hamon"
 version = "0.1.0"
 
+compose.resources {
+    packageOfResClass = "com.hamon.shared.generated.resources"
+}
+
 kotlin {
     compilerOptions {
         freeCompilerArgs.add("-Xexpect-actual-classes")
