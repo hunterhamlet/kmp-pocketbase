@@ -1,57 +1,475 @@
-This is a Kotlin Multiplatform project targeting Android, iOS, Web, Desktop (JVM), Server.
+# kmp-pocketbase
 
-* [/app/iosApp](./app/iosApp/iosApp) contains an iOS application. Even if you’re sharing your UI with Compose
-  Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+A Kotlin Multiplatform SDK for [PocketBase](https://pocketbase.io) — the open-source backend in one file.
 
-* [/app/shared](./app/shared/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-    - [commonMain](./app/shared/src/commonMain/kotlin) is for code that’s common for all targets.
-    - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-      For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-      the [iosMain](./app/shared/src/iosMain/kotlin) folder would be the right place for such calls.
-      Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./app/shared/src/jvmMain/kotlin)
-      folder is the appropriate location.
+## Platforms
 
-* [/core](./core/src) is for the code that will be shared between all targets in the project.
-  The most important subfolder is [commonMain](./core/src/commonMain/kotlin). If preferred, you
-  can add code to the platform-specific folders here too.
-
-* [/server](./server/src/main/kotlin) is for the Ktor server application.
-
-### Running the apps
-
-Use the run configurations provided by the run widget in your IDE's toolbar. You can also use these commands and
-options:
-
-- Android app: `./gradlew :app:androidApp:assembleDebug`
-- Desktop app:
-    - Hot reload: `./gradlew :app:desktopApp:hotRun --auto`
-    - Standard run: `./gradlew :app:desktopApp:run`
-- Server: `./gradlew :server:run`
-- Web app:
-    - Wasm target (faster, modern browsers): `./gradlew :app:webApp:wasmJsBrowserDevelopmentRun`
-    - JS target (slower, supports older browsers): `./gradlew :app:webApp:jsBrowserDevelopmentRun`
-- iOS app: open the [/app/iosApp](./app/iosApp) directory in Xcode and run it from there.
-
-### Running tests
-
-Use the run button in your IDE's editor gutter, or run tests using Gradle tasks:
-
-- Android tests: `./gradlew :app:shared:testAndroidHostTest`
-- Desktop tests: `./gradlew :app:shared:jvmTest`
-- Server tests: `./gradlew :server:test`
-- Web tests:
-    - Wasm target: `./gradlew :app:shared:wasmJsTest`
-    - JS target: `./gradlew :app:shared:jsTest`
-- iOS tests: `./gradlew :app:shared:iosSimulatorArm64Test`
+| Platform | Status |
+|---|---|
+| Android | ✅ |
+| iOS (arm64 + simulatorArm64) | ✅ |
+| JVM (Desktop) | ✅ |
+| JavaScript (Browser) | ✅ |
+| WebAssembly (WasmJS) | ✅ |
 
 ---
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html),
-[Compose Multiplatform](https://github.com/JetBrains/compose-multiplatform/#compose-multiplatform),
-[Kotlin/Wasm](https://kotl.in/wasm/)…
+## Setup
 
-We would appreciate your feedback on Compose/Web and Kotlin/Wasm in the public Slack
-channel [#compose-web](https://slack-chats.kotlinlang.org/c/compose-web).
-If you face any issues, please report them on [YouTrack](https://youtrack.jetbrains.com/newIssue?project=CMP).
+Add the shared module to your target:
+
+```kotlin
+// build.gradle.kts
+commonMain.dependencies {
+    implementation(projects.app.shared)
+}
+```
+
+### Android — one-time init
+
+Call this before creating any `PocketBase` instance (e.g. in your `Application.onCreate`):
+
+```kotlin
+PocketBase.init(context)
+```
+
+Required only when using `TokenPersistence.Encrypted` on Android.
+
+---
+
+## Quick Start
+
+```kotlin
+@Serializable
+data class Article(
+    val title: String,
+    val content: String,
+    val published: Boolean,
+)
+
+val pb = PocketBase(baseUrl = "https://your-pocketbase.io")
+
+val auth = pb.collection("users").authWithPassword<UserProfile>(
+    identity = "user@example.com",
+    password = "password123",
+)
+
+val articles = pb.collection("articles").getList<Article>()
+```
+
+---
+
+## Creating the Client
+
+```kotlin
+val pb = PocketBase(
+    baseUrl          = "https://your-pocketbase.io",
+    tokenPersistence = TokenPersistence.None,       // default
+    logLevel         = PocketBaseLogLevel.NONE,     // default
+    logger           = PocketBaseLogger.Default,
+)
+```
+
+### Token Persistence
+
+| Value | Behavior |
+|---|---|
+| `TokenPersistence.None` | Token lives in memory — lost on restart |
+| `TokenPersistence.Encrypted` | Persisted in Keystore (Android) / Keychain (iOS) |
+
+```kotlin
+val pb = PocketBase(
+    baseUrl          = "https://your-pocketbase.io",
+    tokenPersistence = TokenPersistence.Encrypted,
+)
+```
+
+The token is restored automatically on the next app launch.
+
+### Logging
+
+```kotlin
+val pb = PocketBase(
+    baseUrl  = "https://your-pocketbase.io",
+    logLevel = PocketBaseLogLevel.BASIC,    // URL, status, body
+    // logLevel = PocketBaseLogLevel.HEADERS   // also request/response headers
+)
+```
+
+Custom logger:
+
+```kotlin
+val pb = PocketBase(
+    baseUrl  = "https://your-pocketbase.io",
+    logLevel = PocketBaseLogLevel.BASIC,
+    logger   = PocketBaseLogger { entry -> println(entry) },
+)
+```
+
+---
+
+## Collections
+
+All operations are accessed through `pb.collection("name")`. Instances are cached internally.
+
+```kotlin
+val articles = pb.collection("articles")
+val users    = pb.collection("users")
+```
+
+---
+
+## Reading Records
+
+### Get list (paginated)
+
+```kotlin
+val result: ResultList<Article> = pb.collection("articles").getList<Article>(
+    page    = 1,
+    perPage = 30,
+)
+
+result.items        // List<RecordModel<Article>>
+result.totalItems   // Int
+result.totalPages   // Int
+```
+
+### Get full list (auto-paginated)
+
+```kotlin
+val all: List<RecordModel<Article>> = pb.collection("articles").getFullList<Article>(
+    perPage = 200,
+)
+```
+
+### Get one record
+
+```kotlin
+val record: RecordModel<Article> = pb.collection("articles").getOne<Article>("RECORD_ID")
+
+record.id
+record.collectionName
+record.created
+record.updated
+record.fields   // Article instance
+```
+
+---
+
+## Writing Records
+
+### Create
+
+```kotlin
+val record = pb.collection("articles").create<Article>(
+    buildJsonObject {
+        put("title", "Hello World")
+        put("content", "My first article")
+        put("published", true)
+    }
+)
+```
+
+### Update
+
+```kotlin
+val record = pb.collection("articles").update<Article>(
+    id   = "RECORD_ID",
+    body = buildJsonObject { put("published", false) },
+)
+```
+
+### Delete
+
+```kotlin
+pb.collection("articles").delete("RECORD_ID")
+```
+
+---
+
+## Query DSL
+
+```kotlin
+val result = pb.collection("articles").getList<Article>(
+    query = pbQuery {
+        filter {
+            "published" eq true
+            "views" gt 100
+        }
+        sort {
+            add("created".desc())
+            add("title".asc())
+        }
+        expand("author", "category")
+        fields("id", "title", "published")
+        skipTotal()
+    }
+)
+```
+
+### Filter operators
+
+| Operator | Symbol | Example |
+|---|---|---|
+| `eq` | `=` | `"status" eq "active"` |
+| `neq` | `!=` | `"role" neq "admin"` |
+| `gt` | `>` | `"views" gt 100` |
+| `gte` | `>=` | `"price" gte 10.0` |
+| `lt` | `<` | `"stock" lt 5` |
+| `lte` | `<=` | `"age" lte 18` |
+| `like` | `~` | `"name" like "John"` |
+| `notLike` | `!~` | `"email" notLike "spam"` |
+| `anyEq` | `?=` | `"tags" anyEq "kotlin"` |
+| `anyNeq` | `?!=` | `"tags" anyNeq "java"` |
+| `anyGt` | `?>` | `"scores" anyGt 90` |
+| `anyGte` | `?>=` | `"scores" anyGte 90` |
+| `anyLt` | `?<` | `"scores" anyLt 50` |
+| `anyLte` | `?<=` | `"scores" anyLte 50` |
+| `inRange` | `>= && <=` | `"price" inRange (10..50)` |
+| `notInRange` | `< \|\| >` | `"age" notInRange (18..65)` |
+
+### Logical grouping
+
+```kotlin
+filter {
+    "published" eq true
+    or {
+        "category" eq "news"
+        "category" eq "sports"
+    }
+    not {
+        "status" eq "archived"
+    }
+}
+```
+
+Top-level conditions are combined with `&&`. Use `or {}` and `not {}` for grouping.
+
+### Sort
+
+```kotlin
+sort {
+    add("created".desc())   // -created
+    add("title".asc())      // +title
+}
+```
+
+---
+
+## Authentication
+
+### Auth with password
+
+```kotlin
+@Serializable
+data class UserProfile(val name: String, val email: String)
+
+val auth: AuthResponse<UserProfile> = pb.collection("users")
+    .authWithPassword<UserProfile>(
+        identity = "user@example.com",
+        password = "secret",
+    )
+
+auth.token          // JWT string
+auth.record.fields  // UserProfile
+```
+
+### Auth Refresh
+
+Fetches a new token and updates both the in-memory store and encrypted storage:
+
+```kotlin
+val auth = pb.collection("users").authRefresh<UserProfile>()
+
+// with optional params
+val auth = pb.collection("users").authRefresh<UserProfile>(
+    expand = "profile",
+    fields = "id,email,name",
+)
+```
+
+### Auth Store
+
+```kotlin
+pb.authStore.isValid   // Boolean — true when token present
+pb.authStore.token     // String? — current JWT
+pb.authStore.model     // RecordModel<*>? — authenticated record
+
+pb.authStore.clear()   // removes token from memory and storage
+```
+
+---
+
+## Safe Variants (`try*`)
+
+Every operation has a `try*` variant returning `PocketBaseResult<T>` instead of throwing:
+
+```kotlin
+val result: PocketBaseResult<ResultList<Article>> =
+    pb.collection("articles").tryGetList<Article>()
+
+result
+    .onSuccess { list -> println(list.totalItems) }
+    .onFailure { error -> println(error.message) }
+
+val list  = result.getOrNull()        // null on failure
+val error = result.exceptionOrNull()  // null on success
+val ids   = result.map { it.items.map { r -> r.id } }
+```
+
+| Method | Safe variant |
+|---|---|
+| `getList` | `tryGetList` |
+| `getFullList` | `tryGetFullList` |
+| `getOne` | `tryGetOne` |
+| `create` | `tryCreate` |
+| `update` | `tryUpdate` |
+| `delete` | `tryDelete` |
+| `authWithPassword` | `tryAuthWithPassword` |
+| `authRefresh` | `tryAuthRefresh` |
+| `createWithFiles` | `tryCreateWithFiles` |
+| `updateWithFiles` | `tryUpdateWithFiles` |
+
+---
+
+## Flow Variants
+
+```kotlin
+pb.collection("articles").getListAsFlow<Article>()
+    .collect { list -> ... }
+
+pb.collection("articles").tryGetListAsFlow<Article>()
+    .collect { result -> result.onSuccess { ... }.onFailure { ... } }
+```
+
+Available flow variants: `getListAsFlow`, `tryGetListAsFlow`, `getFullListAsFlow`, `tryGetFullListAsFlow`, `getOneAsFlow`, `tryGetOneAsFlow`.
+
+---
+
+## File Uploads
+
+```kotlin
+val file = FileUpload(
+    field    = "avatar",            // collection field name
+    filename = "photo.jpg",
+    data     = byteArrayOf(/*…*/),
+    mimeType = "image/jpeg",        // default: "application/octet-stream"
+)
+```
+
+### Create with files
+
+```kotlin
+val record = pb.collection("users").createWithFiles<UserProfile>(
+    body       = buildJsonObject { put("name", "Alice") },
+    files      = listOf(file),
+    onProgress = { fraction -> println("${(fraction * 100).toInt()}%") },
+)
+```
+
+### Update with files
+
+```kotlin
+val record = pb.collection("users").updateWithFiles<UserProfile>(
+    id         = "RECORD_ID",
+    body       = buildJsonObject {},
+    files      = listOf(file),
+    onProgress = { fraction -> updateProgressBar(fraction) },
+)
+```
+
+`onProgress` is optional. Receives a `Float` in `0.0..1.0`.
+
+### Multi-file field modifiers
+
+```kotlin
+// append without replacing existing files
+FileUpload(field = "documents+", filename = "new.pdf", data = bytes)
+
+// delete specific files
+buildJsonObject {
+    put("documents-", buildJsonArray { add("old_filename_abc123.pdf") })
+}
+```
+
+### File URLs
+
+```kotlin
+val url = pb.collection("users").getFileUrl(
+    recordId = record.id,
+    filename  = record.fields.avatar,  // filename returned by PocketBase
+)
+
+// with thumbnail (jpg, png, gif, webp)
+val thumb = pb.collection("users").getFileUrl(
+    recordId = record.id,
+    filename  = record.fields.avatar,
+    thumb     = "100x100",
+)
+```
+
+URL format: `{baseUrl}/api/files/{collection}/{recordId}/{filename}`
+
+> PocketBase appends a 10-character random suffix to filenames (e.g. `photo_52iwbgds7l.jpg`). The final filename is returned in the record after upload.
+
+---
+
+## Realtime
+
+```kotlin
+pb.collection("articles").subscribe<Article>()
+    .collect { result ->
+        result.onSuccess { event ->
+            when (event.action) {
+                RealtimeAction.CREATE -> println("created ${event.record.id}")
+                RealtimeAction.UPDATE -> println("updated ${event.record.id}")
+                RealtimeAction.DELETE -> println("deleted ${event.record.id}")
+            }
+        }
+        .onFailure { error -> println(error.message) }
+    }
+
+// subscribe to a specific record
+pb.collection("articles").subscribe<Article>(recordId = "RECORD_ID")
+    .collect { ... }
+
+// auto-reconnect on connection loss (3s retry)
+pb.collection("articles").subscribe<Article>(autoReconnect = true)
+    .collect { ... }
+```
+
+---
+
+## RecordModel
+
+All records are wrapped in:
+
+```kotlin
+data class RecordModel<T>(
+    val id             : String,
+    val collectionId   : String,
+    val collectionName : String,
+    val created        : String,
+    val updated        : String,
+    val fields         : T,       // your @Serializable data class
+)
+```
+
+---
+
+## Tech Stack
+
+| Component | Library | Version |
+|---|---|---|
+| Networking | Ktor Client | 3.5.0 |
+| Serialization | Kotlinx Serialization | 1.8.1 |
+| Coroutines | Kotlinx Coroutines | 1.11.0 |
+| Encrypted Storage | KSafe | 2.1.1 |
+| UI (demo) | Compose Multiplatform | 1.11.1 |
+| Kotlin | — | 2.4.0 |
+
+---
+
+## License
+
+MIT
