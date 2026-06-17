@@ -1,8 +1,11 @@
 #!/bin/sh
 set -e
 
-echo "🔍 ktlintCheck..."
+echo "Running pre-push checks..."
 ./gradlew ktlintCheck --daemon -q
-echo "🔍 detekt..."
+echo "  ktlint OK"
 ./gradlew detekt --daemon -q
-echo "✅ Checks passed. Pushing..."
+echo "  detekt OK"
+./gradlew :app:shared:jacocoVerify --daemon -q
+echo "  coverage OK"
+echo "All checks passed."
