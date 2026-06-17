@@ -9,7 +9,10 @@ import com.hamon.kmp_pocketbase.network.pocketbase.realtime.RealtimeEvent
 import com.hamon.kmp_pocketbase.network.pocketbase.realtime.RealtimeService
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.onUpload
 import io.ktor.client.request.delete
+import io.ktor.client.request.forms.MultiPartFormDataContent
+import io.ktor.client.request.forms.formData
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.patch
@@ -18,6 +21,8 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.Headers
+import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -313,6 +318,111 @@ class RecordService internal constructor(
         val s = serializer<T>()
         return safeSuspend { authWithPasswordInternal(identity, password, s) }
     }
+
+    @PublishedApi
+    internal suspend fun <T> createWithFilesInternal(
+        body: JsonObject,
+        files: List<FileUpload>,
+        onProgress: ((Float) -> Unit)?,
+        serializer: KSerializer<T>,
+    ): RecordModel<T> =
+        client
+            .post(baseRecordsUrl) {
+                setBody(buildMultipartBody(body, files))
+                authStore.token?.let { header("Authorization", it) }
+                if (onProgress != null) {
+                    onUpload { sent, total ->
+                        val t = total ?: return@onUpload
+                        if (t > 0) onProgress(sent.toFloat() / t.toFloat())
+                    }
+                }
+            }.decodeAsRecord(serializer)
+
+    @Generated
+    suspend inline fun <reified T> createWithFiles(
+        body: JsonObject,
+        files: List<FileUpload>,
+        noinline onProgress: ((Float) -> Unit)? = null,
+    ): RecordModel<T> = createWithFilesInternal(body, files, onProgress, serializer())
+
+    @Generated
+    suspend inline fun <reified T> tryCreateWithFiles(
+        body: JsonObject,
+        files: List<FileUpload>,
+        noinline onProgress: ((Float) -> Unit)? = null,
+    ): PocketBaseResult<RecordModel<T>> {
+        val s = serializer<T>()
+        return safeSuspend { createWithFilesInternal(body, files, onProgress, s) }
+    }
+
+    @PublishedApi
+    internal suspend fun <T> updateWithFilesInternal(
+        id: String,
+        body: JsonObject,
+        files: List<FileUpload>,
+        onProgress: ((Float) -> Unit)?,
+        serializer: KSerializer<T>,
+    ): RecordModel<T> =
+        client
+            .patch("$baseRecordsUrl/$id") {
+                setBody(buildMultipartBody(body, files))
+                authStore.token?.let { header("Authorization", it) }
+                if (onProgress != null) {
+                    onUpload { sent, total ->
+                        val t = total ?: return@onUpload
+                        if (t > 0) onProgress(sent.toFloat() / t.toFloat())
+                    }
+                }
+            }.decodeAsRecord(serializer)
+
+    @Generated
+    suspend inline fun <reified T> updateWithFiles(
+        id: String,
+        body: JsonObject,
+        files: List<FileUpload>,
+        noinline onProgress: ((Float) -> Unit)? = null,
+    ): RecordModel<T> = updateWithFilesInternal(id, body, files, onProgress, serializer())
+
+    @Generated
+    suspend inline fun <reified T> tryUpdateWithFiles(
+        id: String,
+        body: JsonObject,
+        files: List<FileUpload>,
+        noinline onProgress: ((Float) -> Unit)? = null,
+    ): PocketBaseResult<RecordModel<T>> {
+        val s = serializer<T>()
+        return safeSuspend { updateWithFilesInternal(id, body, files, onProgress, s) }
+    }
+
+    fun getFileUrl(
+        recordId: String,
+        filename: String,
+        thumb: String? = null,
+    ): String =
+        buildString {
+            append("$baseUrl/api/files/$collectionName/$recordId/$filename")
+            thumb?.let { append("?thumb=$it") }
+        }
+
+    private fun buildMultipartBody(
+        body: JsonObject,
+        files: List<FileUpload>,
+    ): MultiPartFormDataContent =
+        MultiPartFormDataContent(
+            formData {
+                append("@jsonPayload", body.toString())
+                files.forEach { file ->
+                    append(
+                        file.field,
+                        file.data,
+                        Headers.build {
+                            append(HttpHeaders.ContentType, file.mimeType)
+                            append(HttpHeaders.ContentDisposition, "filename=\"${file.filename}\"")
+                        },
+                    )
+                }
+            },
+        )
 
     @PublishedApi
     internal fun <T> subscribeInternal(
