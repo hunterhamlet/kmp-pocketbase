@@ -13,6 +13,7 @@ plugins {
     alias(libs.plugins.ktor) apply false
     alias(libs.plugins.detekt) apply false
     alias(libs.plugins.ktlint) apply false
+    alias(libs.plugins.kover) apply false
 }
 
 val detektCompose = libs.detekt.compose
