@@ -69,8 +69,6 @@ class FileUploadTest {
             mimeType = "application/pdf",
         )
 
-    // createWithFiles
-
     @Test
     fun createWithFilesSendsMultipartRequest() =
         runTest {
@@ -189,8 +187,6 @@ class FileUploadTest {
             assertTrue(progressValues.isEmpty() || progressValues.all { it in 0f..1f })
         }
 
-    // updateWithFiles
-
     @Test
     fun updateWithFilesSendsPatchMethod() =
         runTest {
@@ -239,8 +235,6 @@ class FileUploadTest {
             assertEquals("r1", record.id)
         }
 
-    // tryCreateWithFiles / tryUpdateWithFiles
-
     @Test
     fun tryCreateWithFilesReturnsSuccess() =
         runTest {
@@ -276,8 +270,6 @@ class FileUploadTest {
             assertIs<PocketBaseResult.Failure>(result)
         }
 
-    // getFileUrl
-
     @Test
     fun getFileUrlBuildsCorrectUrl() {
         val engine = MockEngine { respond("", HttpStatusCode.OK, headersOf()) }
@@ -298,8 +290,6 @@ class FileUploadTest {
         val url = service(engine).getFileUrl("r1", "photo.jpg")
         assertTrue(!url.contains("?"))
     }
-
-    // FileUpload data class
 
     @Test
     fun fileUploadDefaultMimeTypeIsOctetStream() {
