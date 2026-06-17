@@ -94,29 +94,20 @@ internal fun ChatScreen(onBack: () -> Unit) {
                 }
             }
 
-            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 OutlinedTextField(
-                    value = vm.authorInput,
-                    onValueChange = { vm.authorInput = it },
-                    label = { Text("Your name") },
-                    modifier = Modifier.fillMaxWidth(),
+                    value = vm.messageInput,
+                    onValueChange = { vm.messageInput = it },
+                    label = { Text("Message") },
+                    modifier = Modifier.weight(1f),
                     singleLine = true,
                 )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    OutlinedTextField(
-                        value = vm.messageInput,
-                        onValueChange = { vm.messageInput = it },
-                        label = { Text("Message") },
-                        modifier = Modifier.weight(1f),
-                        singleLine = true,
-                    )
-                    Button(onClick = vm::sendMessage) {
-                        Text("Send")
-                    }
+                Button(onClick = vm::sendMessage) {
+                    Text("Send")
                 }
             }
         }

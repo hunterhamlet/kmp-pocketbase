@@ -6,4 +6,5 @@ import kotlinx.serialization.Serializable
 internal data class Post(
     val title: String = "",
     val content: String = "",
+    val author: String = "",
 )

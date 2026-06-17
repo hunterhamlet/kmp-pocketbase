@@ -52,27 +52,16 @@ class ChatViewModelTest {
     fun sendMessageClearsInputOnSuccess() = runTest {
         val vm = viewModel()
         vm.messageInput = "Hello"
-        vm.authorInput = "User"
         vm.sendMessage()
         assertEquals("", vm.messageInput)
     }
 
     @Test
     fun sendMessageDoesNothingWhenInputIsBlank() = runTest {
-        val vm = viewModel(FakeChatRepository(sendResult = PocketBaseResult.Failure(RuntimeException("err"))))
+        val vm = viewModel()
         vm.messageInput = ""
-        vm.authorInput = "User"
         vm.sendMessage()
         assertEquals("", vm.messageInput)
-    }
-
-    @Test
-    fun sendMessageDoesNothingWhenAuthorIsBlank() = runTest {
-        val vm = viewModel()
-        vm.messageInput = "Hello"
-        vm.authorInput = ""
-        vm.sendMessage()
-        assertEquals("Hello", vm.messageInput)
     }
 }
 
@@ -85,6 +74,6 @@ private class FakeChatRepository(
     private val _getResult = getResult
 
     override fun subscribeToMessages() = events
-    override suspend fun sendMessage(text: String, author: String) = sendResult
+    override suspend fun sendMessage(text: String) = sendResult
     override suspend fun getRecentMessages() = _getResult
 }
