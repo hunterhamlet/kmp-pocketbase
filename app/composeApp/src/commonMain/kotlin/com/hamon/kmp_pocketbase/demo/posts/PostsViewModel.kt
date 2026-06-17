@@ -44,9 +44,10 @@ internal class PostsViewModel(private val repo: PostsRepository) : ViewModel() {
         viewModelScope.launch {
             actionState = PostActionState.Loading
             repo.createPost(title, content)
-                .onSuccess {
+                .onSuccess { newRecord ->
+                    val current = (postsState as? PostsUiState.Success)?.posts ?: emptyList()
+                    postsState = PostsUiState.Success(current + newRecord)
                     actionState = PostActionState.Done
-                    loadPosts()
                 }
                 .onFailure { actionState = PostActionState.Error(it.message ?: "Failed to create post") }
         }
@@ -56,9 +57,12 @@ internal class PostsViewModel(private val repo: PostsRepository) : ViewModel() {
         viewModelScope.launch {
             actionState = PostActionState.Loading
             repo.updatePost(id, title, content)
-                .onSuccess {
+                .onSuccess { updated ->
+                    val current = (postsState as? PostsUiState.Success)?.posts?.toMutableList() ?: mutableListOf()
+                    val idx = current.indexOfFirst { it.id == id }
+                    if (idx >= 0) current[idx] = updated
+                    postsState = PostsUiState.Success(current.toList())
                     actionState = PostActionState.Done
-                    loadPosts()
                 }
                 .onFailure { actionState = PostActionState.Error(it.message ?: "Failed to update post") }
         }
@@ -69,8 +73,9 @@ internal class PostsViewModel(private val repo: PostsRepository) : ViewModel() {
             actionState = PostActionState.Loading
             repo.deletePost(id)
                 .onSuccess {
+                    val current = (postsState as? PostsUiState.Success)?.posts?.filter { it.id != id } ?: emptyList()
+                    postsState = PostsUiState.Success(current)
                     actionState = PostActionState.Done
-                    loadPosts()
                 }
                 .onFailure { actionState = PostActionState.Error(it.message ?: "Failed to delete post") }
         }

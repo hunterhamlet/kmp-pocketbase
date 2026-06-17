@@ -37,7 +37,7 @@ internal class ChatViewModel(private val repo: ChatRepository) : ViewModel() {
                 result.onSuccess { event ->
                     val current = (uiState as? ChatUiState.Ready)?.messages?.toMutableList() ?: mutableListOf()
                     when (event.action) {
-                        RealtimeAction.CREATE -> current.add(event.record)
+                        RealtimeAction.CREATE -> if (current.none { it.id == event.record.id }) current.add(event.record)
                         RealtimeAction.UPDATE -> {
                             val idx = current.indexOfFirst { it.id == event.record.id }
                             if (idx >= 0) current[idx] = event.record
@@ -55,7 +55,14 @@ internal class ChatViewModel(private val repo: ChatRepository) : ViewModel() {
         if (text.isEmpty()) return
         viewModelScope.launch {
             repo.sendMessage(text)
-                .onSuccess { messageInput = "" }
+                .onSuccess { newRecord ->
+                    messageInput = ""
+                    val current = (uiState as? ChatUiState.Ready)?.messages?.toMutableList() ?: mutableListOf()
+                    if (current.none { it.id == newRecord.id }) {
+                        current.add(newRecord)
+                        uiState = ChatUiState.Ready(current.toList())
+                    }
+                }
         }
     }
 }
