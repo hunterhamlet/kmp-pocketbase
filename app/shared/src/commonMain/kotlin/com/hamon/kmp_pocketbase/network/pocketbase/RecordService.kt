@@ -315,6 +315,45 @@ class RecordService internal constructor(
     }
 
     @PublishedApi
+    internal suspend fun <T> authRefreshInternal(
+        expand: String?,
+        fields: String?,
+        serializer: KSerializer<T>,
+    ): AuthResponse<T> {
+        val refreshUrl = "$baseUrl/api/collections/$collectionName/auth-refresh"
+        val jsonObject =
+            client
+                .post(refreshUrl) {
+                    url {
+                        expand?.let { parameters.append("expand", it) }
+                        fields?.let { parameters.append("fields", it) }
+                    }
+                    authStore.token?.let { header("Authorization", it) }
+                }.decodeAsJsonObject()
+        val token = jsonObject["token"]?.jsonPrimitive?.content ?: ""
+        val record =
+            jsonObject["record"]?.jsonObject?.toRecordModel(serializer)
+                ?: error("missing record in auth-refresh response")
+        authStore.save(token, record)
+        return AuthResponse(token = token, record = record)
+    }
+
+    @Generated
+    suspend inline fun <reified T> authRefresh(
+        expand: String? = null,
+        fields: String? = null,
+    ): AuthResponse<T> = authRefreshInternal(expand, fields, serializer())
+
+    @Generated
+    suspend inline fun <reified T> tryAuthRefresh(
+        expand: String? = null,
+        fields: String? = null,
+    ): PocketBaseResult<AuthResponse<T>> {
+        val s = serializer<T>()
+        return safeSuspend { authRefreshInternal(expand, fields, s) }
+    }
+
+    @PublishedApi
     internal fun <T> subscribeInternal(
         topic: String,
         autoReconnect: Boolean,
