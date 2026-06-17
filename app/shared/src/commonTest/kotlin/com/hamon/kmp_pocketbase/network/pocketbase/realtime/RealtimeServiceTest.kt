@@ -1,6 +1,7 @@
 package com.hamon.kmp_pocketbase.network.pocketbase.realtime
 
 import com.hamon.kmp_pocketbase.network.pocketbase.AuthStore
+import com.hamon.kmp_pocketbase.network.pocketbase.storage.InMemoryTokenStorage
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -23,7 +24,7 @@ class RealtimeServiceTest {
         RealtimeService(
             client = HttpClient(MockEngine { respond("", HttpStatusCode.OK, headersOf()) }),
             baseUrl = "https://test.pocketbase.io",
-            authStore = AuthStore(),
+            authStore = AuthStore(InMemoryTokenStorage()),
         )
 
     @Test
