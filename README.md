@@ -12,16 +12,34 @@ A Kotlin Multiplatform SDK for [PocketBase](https://pocketbase.io) — the open-
 | JavaScript (Browser) | ✅ |
 | WebAssembly (WasmJS) | ✅ |
 
+The same API works identically across all platforms. No platform-specific code required in your shared logic.
+
 ---
 
-## Setup
+## Installation
 
-Add the shared module to your target:
+GitHub Packages requires authentication even for public packages. Add your credentials to `~/.gradle/gradle.properties`:
+
+```properties
+gpr.user=YOUR_GITHUB_USERNAME
+gpr.key=YOUR_GITHUB_TOKEN
+```
+
+Then add the repository and dependency to your `build.gradle.kts`:
 
 ```kotlin
-// build.gradle.kts
-commonMain.dependencies {
-    implementation(projects.app.shared)
+repositories {
+    maven {
+        url = uri("https://maven.pkg.github.com/hunterhamlet/kmp-pocketbase")
+        credentials {
+            username = providers.gradleProperty("gpr.user").orNull
+            password = providers.gradleProperty("gpr.key").orNull
+        }
+    }
+}
+
+dependencies {
+    implementation("com.hamon:kmp-pocketbase:0.1.0")
 }
 ```
 
