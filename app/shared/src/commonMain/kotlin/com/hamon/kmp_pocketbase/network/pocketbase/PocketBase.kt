@@ -1,6 +1,7 @@
 package com.hamon.kmp_pocketbase.network.pocketbase
 
 import com.hamon.kmp_pocketbase.network.createHttpClient
+import com.hamon.kmp_pocketbase.network.pocketbase.realtime.RealtimeService
 
 class PocketBase(
     private val baseUrl: String,
@@ -12,6 +13,7 @@ class PocketBase(
     private val client = createHttpClient()
     private val normalizedBaseUrl = baseUrl.trimEnd('/')
     private val log = PocketBaseLog(logLevel, logger)
+    private val realtime = RealtimeService(client, normalizedBaseUrl, authStore)
     private val services = mutableMapOf<String, RecordService>()
 
     fun collection(name: String): RecordService =
@@ -22,6 +24,7 @@ class PocketBase(
                 collectionName = name,
                 authStore = authStore,
                 log = log,
+                realtime = realtime,
             )
         }
 }

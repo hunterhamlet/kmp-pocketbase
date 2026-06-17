@@ -1,9 +1,6 @@
 package com.hamon.kmp_pocketbase.network.pocketbase.dto
 
-import kotlinx.serialization.Serializable
-
-@Serializable
-data class AuthResponse(
+data class AuthResponse<T>(
     val token: String,
-    val record: RecordModel,
+    val record: RecordModel<T>,
 )

@@ -5,14 +5,14 @@ import com.hamon.kmp_pocketbase.network.pocketbase.dto.RecordModel
 class AuthStore {
     var token: String? = null
         private set
-    var model: RecordModel? = null
+    var model: RecordModel<*>? = null
         private set
 
     val isValid: Boolean get() = !token.isNullOrEmpty()
 
     internal fun save(
         token: String,
-        model: RecordModel,
+        model: RecordModel<*>,
     ) {
         this.token = token
         this.model = model
