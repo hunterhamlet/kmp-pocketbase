@@ -10,8 +10,7 @@ plugins {
 }
 
 group = "com.hamon"
-version = "0.1.0"
-// x
+version = "0.1.0-alpha01"
 
 kotlin {
     compilerOptions {
