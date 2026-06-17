@@ -1,8 +1,10 @@
 package com.hamon.kmp_pocketbase.network.pocketbase
 
+import com.hamon.kmp_pocketbase.network.pocketbase.dto.RecordModel
 import com.hamon.kmp_pocketbase.network.pocketbase.realtime.RealtimeService
 import com.hamon.kmp_pocketbase.network.pocketbase.sort.asc
 import com.hamon.kmp_pocketbase.network.pocketbase.sort.desc
+import com.hamon.kmp_pocketbase.network.pocketbase.storage.InMemoryTokenStorage
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -50,7 +52,7 @@ class RecordServiceTest {
 
     private fun service(
         engine: MockEngine,
-        authStore: AuthStore = AuthStore(),
+        authStore: AuthStore = AuthStore(InMemoryTokenStorage()),
         logLevel: PocketBaseLogLevel = PocketBaseLogLevel.NONE,
     ): RecordService {
         val client =
@@ -270,7 +272,7 @@ class RecordServiceTest {
     fun authWithPasswordSavesTokenInAuthStore() =
         runTest {
             val engine = MockEngine { respond(authResponseJson, HttpStatusCode.OK, jsonHeaders()) }
-            val authStore = AuthStore()
+            val authStore = AuthStore(InMemoryTokenStorage())
             service(engine, authStore).authWithPassword<TestRecord>("user@test.com", "secret")
             assertTrue(authStore.isValid)
             assertEquals("tok123", authStore.token)
@@ -300,11 +302,10 @@ class RecordServiceTest {
                     authHeader = request.headers[HttpHeaders.Authorization]
                     respond(resultListJson, HttpStatusCode.OK, jsonHeaders())
                 }
-            val authStore = AuthStore()
+            val authStore = AuthStore(InMemoryTokenStorage())
             authStore.save(
                 "my-token",
-                com.hamon.kmp_pocketbase.network.pocketbase.dto
-                    .RecordModel(fields = TestRecord()),
+                RecordModel(fields = TestRecord()),
             )
             service(engine, authStore).getList<TestRecord>()
             assertEquals("my-token", authHeader)

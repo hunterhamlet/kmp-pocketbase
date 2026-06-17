@@ -2,19 +2,39 @@ package com.hamon.kmp_pocketbase.network.pocketbase
 
 import com.hamon.kmp_pocketbase.network.createHttpClient
 import com.hamon.kmp_pocketbase.network.pocketbase.realtime.RealtimeService
+import com.hamon.kmp_pocketbase.network.pocketbase.storage.EncryptedTokenStorage
+import com.hamon.kmp_pocketbase.network.pocketbase.storage.InMemoryTokenStorage
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 class PocketBase(
     private val baseUrl: String,
+    tokenPersistence: TokenPersistence = TokenPersistence.None,
     logLevel: PocketBaseLogLevel = PocketBaseLogLevel.NONE,
     logger: PocketBaseLogger = PocketBaseLogger.Default,
 ) {
-    val authStore: AuthStore = AuthStore()
+    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+
+    val authStore: AuthStore =
+        AuthStore(
+            tokenStorage =
+                when (tokenPersistence) {
+                    TokenPersistence.None -> InMemoryTokenStorage()
+                    TokenPersistence.Encrypted -> EncryptedTokenStorage()
+                },
+        )
 
     private val client = createHttpClient()
     private val normalizedBaseUrl = baseUrl.trimEnd('/')
     private val log = PocketBaseLog(logLevel, logger)
     private val realtime = RealtimeService(client, normalizedBaseUrl, authStore)
     private val services = mutableMapOf<String, RecordService>()
+
+    init {
+        scope.launch { authStore.restore() }
+    }
 
     fun collection(name: String): RecordService =
         services.getOrPut(name) {
@@ -27,4 +47,6 @@ class PocketBase(
                 realtime = realtime,
             )
         }
+
+    companion object
 }

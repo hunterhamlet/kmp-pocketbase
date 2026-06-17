@@ -11,6 +11,10 @@ plugins {
 }
 
 kotlin {
+    compilerOptions {
+        freeCompilerArgs.add("-Xexpect-actual-classes")
+    }
+
     listOf(
         iosArm64(),
         iosSimulatorArm64(),
@@ -60,6 +64,7 @@ kotlin {
         }
         commonMain.dependencies {
             api(projects.core)
+            implementation(libs.ksafe)
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)
             implementation(libs.compose.material3)
@@ -119,6 +124,8 @@ kover {
                     "*.PocketBase\$*",
                     "*.realtime.SubscribeRequest",
                     "*.realtime.SubscribeRequest\$Companion",
+                    "*.storage.EncryptedTokenStorage",
+                    "*.storage.EncryptedTokenStorage\$*",
                 )
                 annotatedBy("*.Generated")
                 packages("*.generated.*")
