@@ -8,7 +8,7 @@ on:
     tags:
       - 'v*.*.*'
     paths:
-      - 'app/shared/build.gradle.kts'
+      - 'core/build.gradle.kts'
 
 jobs:
   publish:
@@ -31,7 +31,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Publish to GitHub Packages
-        run: ./gradlew :app:shared:publishAllPublicationsToGitHubPackagesRepository
+        run: ./gradlew :core:publishAllPublicationsToGitHubPackagesRepository
         env:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

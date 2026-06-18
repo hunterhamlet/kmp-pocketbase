@@ -1,24 +1,64 @@
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidMultiplatformLibrary)
+    alias(libs.plugins.composeMultiplatform)
+    alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinSerialization)
-    alias(libs.plugins.kover)
-    `maven-publish`
 }
 
-group = "com.hamon"
-version = "0.1.0-alpha01"
+val localProps =
+    Properties().apply {
+        rootProject
+            .file("local.properties")
+            .takeIf { it.exists() }
+            ?.inputStream()
+            ?.use { load(it) }
+    }
+val pocketbaseUrl: String =
+    localProps.getProperty(
+        "pocketbase.url",
+        "https://pocketbase-library-demo.pockethost.io",
+    )
+
+val generateAppConfig by tasks.registering {
+    val outDir = layout.buildDirectory.dir("generated/appconfig/commonMain/kotlin")
+    val url = pocketbaseUrl
+    outputs.dir(outDir)
+    inputs.property("pocketbaseUrl", url)
+    doLast {
+        val file = outDir.get().file("com/hamon/kmp_pocketbase/demo/AppConfig.kt").asFile
+        file.parentFile.mkdirs()
+        file.writeText(
+            """
+package com.hamon.kmp_pocketbase.demo
+
+internal object AppConfig {
+    const val POCKETBASE_URL = "$url"
+}
+            """.trimIndent(),
+        )
+    }
+}
 
 kotlin {
     compilerOptions {
         freeCompilerArgs.add("-Xexpect-actual-classes")
     }
 
-    iosArm64()
-    iosSimulatorArm64()
+    listOf(
+        iosArm64(),
+        iosSimulatorArm64(),
+    ).forEach { iosTarget ->
+        iosTarget.binaries.framework {
+            baseName = "Shared"
+            isStatic = true
+            export(projects.core)
+        }
+    }
 
     jvm()
 
@@ -33,89 +73,57 @@ kotlin {
 
     androidLibrary {
         namespace = "com.hamon.kmp_pocketbase.app.shared"
-        compileSdk = libs.versions.android.compileSdk.get().toInt()
-        minSdk = libs.versions.android.minSdk.get().toInt()
+        compileSdk =
+            libs.versions.android.compileSdk
+                .get()
+                .toInt()
+        minSdk =
+            libs.versions.android.minSdk
+                .get()
+                .toInt()
         compilerOptions {
             jvmTarget = JvmTarget.JVM_11
+        }
+        androidResources {
+            enable = true
+        }
+        withHostTest {
+            isIncludeAndroidResources = true
         }
     }
 
     sourceSets {
-        commonMain.dependencies {
-            api(projects.core)
-            implementation(libs.ksafe)
-            implementation(libs.ktor.clientCore)
-            implementation(libs.ktor.clientContentNegotiation)
-            implementation(libs.ktor.clientLogging)
-            implementation(libs.ktor.serializationKotlinxJson)
-            implementation(libs.kotlinx.serializationJson)
-            implementation(libs.kotlinx.coroutinesCore)
+        commonMain {
+            kotlin.srcDir(
+                generateAppConfig.map {
+                    layout.buildDirectory.dir("generated/appconfig/commonMain/kotlin")
+                },
+            )
+            dependencies {
+                api(projects.core)
+                implementation(libs.kotlinx.serializationJson)
+                implementation(libs.compose.runtime)
+                implementation(libs.compose.foundation)
+                implementation(libs.compose.material3)
+                implementation(libs.compose.ui)
+                implementation(libs.compose.uiToolingPreview)
+                implementation(libs.androidx.lifecycle.viewmodelCompose)
+                implementation(libs.androidx.lifecycle.runtimeCompose)
+            }
+        }
+        androidMain.dependencies {
+            implementation(libs.compose.uiToolingPreview)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
-            implementation(libs.ktor.clientMock)
             implementation(libs.kotlinx.coroutinesTest)
         }
-        androidMain.dependencies {
-            implementation(libs.ktor.clientOkHttp)
-        }
-        iosMain.dependencies {
-            implementation(libs.ktor.clientDarwin)
-        }
-        jvmMain.dependencies {
-            implementation(libs.ktor.clientCio)
-        }
         jsMain.dependencies {
-            implementation(libs.ktor.clientJs)
-        }
-        wasmJsMain.dependencies {
-            implementation(libs.ktor.clientJs)
+            implementation(libs.wrappers.browser)
         }
     }
 }
 
-kover {
-    reports {
-        filters {
-            excludes {
-                classes(
-                    "*.HttpClientFactoryKt",
-                    "*.HttpClientFactory_jvmKt",
-                    "*.PocketBase",
-                    "*.PocketBase\$*",
-                    "*.realtime.SubscribeRequest",
-                    "*.realtime.SubscribeRequest\$Companion",
-                    "*.storage.EncryptedTokenStorage",
-                    "*.storage.EncryptedTokenStorage\$*",
-                )
-                annotatedBy("*.Generated")
-                packages("*.generated.*")
-            }
-        }
-        total {
-            verify {
-                rule {
-                    minBound(70)
-                }
-            }
-        }
-    }
-}
-
-afterEvaluate {
-    publishing {
-        repositories {
-            maven {
-                name = "GitHubPackages"
-                url = uri("https://maven.pkg.github.com/hunterhamlet/kmp-pocketbase")
-                credentials {
-                    username = System.getenv("GITHUB_ACTOR")
-                    password = System.getenv("GITHUB_TOKEN")
-                }
-            }
-        }
-        publications.withType<MavenPublication> {
-            artifactId = artifactId.replace("shared", "kmp-pocketbase")
-        }
-    }
+dependencies {
+    androidRuntimeClasspath(libs.compose.uiTooling)
 }

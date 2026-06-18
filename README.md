@@ -34,28 +34,47 @@ The runtime (`kotlinx-serialization-json`) is included transitively — no need 
 
 ## Installation
 
-GitHub Packages requires authentication even for public packages. Add your credentials to `~/.gradle/gradle.properties`:
+GitHub Packages requires authentication even for public packages.
+
+**1. Crea `local.properties`** en la raíz de tu proyecto (ya está en `.gitignore` en proyectos Android/KMP, nunca se sube al repositorio):
 
 ```properties
 gpr.user=YOUR_GITHUB_USERNAME
 gpr.key=YOUR_GITHUB_TOKEN
 ```
 
-Then add the repository and dependency to your `build.gradle.kts`:
+El token necesita el scope `read:packages`. Puedes generarlo en **GitHub → Settings → Developer settings → Personal access tokens**.
+
+**2. Agrega el repositorio en `settings.gradle.kts`:**
 
 ```kotlin
-repositories {
-    maven {
-        url = uri("https://maven.pkg.github.com/hunterhamlet/kmp-pocketbase")
-        credentials {
-            username = providers.gradleProperty("gpr.user").orNull
-            password = providers.gradleProperty("gpr.key").orNull
+import java.util.Properties
+
+val localProperties = Properties()
+val localPropertiesFile = file("local.properties")
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.inputStream().use { localProperties.load(it) }
+}
+
+dependencyResolutionManagement {
+    repositories {
+        // ... tus otros repositorios
+        maven {
+            url = uri("https://maven.pkg.github.com/hunterhamlet/kmp-pocketbase")
+            credentials {
+                username = localProperties.getProperty("gpr.user")
+                password = localProperties.getProperty("gpr.key")
+            }
         }
     }
 }
+```
 
+**3. Agrega la dependencia en `build.gradle.kts`:**
+
+```kotlin
 dependencies {
-    implementation("com.hamon:kmp-pocketbase:0.1.0")
+    implementation("com.hamon:kmp-pocketbase:0.1.0-alpha01")
 }
 ```
 
