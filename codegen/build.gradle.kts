@@ -1,5 +1,6 @@
 plugins {
     `java-gradle-plugin`
+    `maven-publish`
     kotlin("jvm") version "2.4.0"
     id("org.jetbrains.kotlin.plugin.serialization") version "2.4.0"
 }
@@ -26,6 +27,21 @@ gradlePlugin {
         create("pocketbaseCodegen") {
             id = "com.hamon.kmp-pocketbase.codegen"
             implementationClass = "com.hamon.kmp_pocketbase.codegen.PocketbaseCodegenPlugin"
+            displayName = "PocketBase Codegen"
+            description = "Generates Kotlin Multiplatform models from a PocketBase schema JSON file."
+        }
+    }
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/hunterhamlet/kmp-pocketbase")
+            credentials {
+                username = System.getenv("GITHUB_ACTOR")
+                password = System.getenv("GITHUB_TOKEN")
+            }
         }
     }
 }
