@@ -14,9 +14,11 @@ kotlin {
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
     implementation("com.squareup:kotlinpoet:2.1.0")
+    compileOnly("org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.0")
 
     testImplementation(kotlin("test"))
     testImplementation("junit:junit:4.13.2")
+    testImplementation(gradleTestKit())
 }
 
 gradlePlugin {
