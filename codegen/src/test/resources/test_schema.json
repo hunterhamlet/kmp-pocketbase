@@ -1,0 +1,225 @@
+[
+  {
+    "id": "_pb_users_auth_",
+    "name": "account",
+    "type": "auth",
+    "system": false,
+    "fields": [
+      {
+        "id": "text3208210256",
+        "name": "id",
+        "type": "text",
+        "required": true,
+        "system": true,
+        "hidden": false,
+        "presentable": false,
+        "primaryKey": true,
+        "autogeneratePattern": "[a-z0-9]{15}",
+        "min": 15,
+        "max": 15,
+        "pattern": "^[a-z0-9]+$"
+      },
+      {
+        "id": "email3885137012",
+        "name": "email",
+        "type": "email",
+        "required": true,
+        "system": true,
+        "hidden": false,
+        "presentable": false,
+        "exceptDomains": null,
+        "onlyDomains": null
+      },
+      {
+        "id": "bool256245529",
+        "name": "verified",
+        "type": "bool",
+        "required": false,
+        "system": true,
+        "hidden": false,
+        "presentable": false
+      },
+      {
+        "id": "relation3438940856",
+        "name": "profile_id",
+        "type": "relation",
+        "required": false,
+        "system": false,
+        "hidden": false,
+        "presentable": false,
+        "collectionId": "pbc_268752357",
+        "cascadeDelete": false,
+        "maxSelect": 1,
+        "minSelect": 0
+      },
+      {
+        "id": "autodate2990389176",
+        "name": "create_at",
+        "type": "autodate",
+        "required": false,
+        "system": false,
+        "hidden": false,
+        "presentable": false,
+        "onCreate": true,
+        "onUpdate": false
+      },
+      {
+        "id": "autodate3332085495",
+        "name": "update_at",
+        "type": "autodate",
+        "required": false,
+        "system": false,
+        "hidden": false,
+        "presentable": false,
+        "onCreate": true,
+        "onUpdate": true
+      }
+    ],
+    "indexes": [],
+    "system": false
+  },
+  {
+    "id": "pbc_3142635823",
+    "name": "_superusers",
+    "type": "auth",
+    "system": true,
+    "fields": [
+      {
+        "id": "text3208210256",
+        "name": "id",
+        "type": "text",
+        "required": true,
+        "system": true,
+        "hidden": false,
+        "presentable": false,
+        "primaryKey": true,
+        "autogeneratePattern": "[a-z0-9]{15}",
+        "min": 15,
+        "max": 15,
+        "pattern": "^[a-z0-9]+$"
+      },
+      {
+        "id": "autodate2990389176",
+        "name": "created",
+        "type": "autodate",
+        "required": false,
+        "system": true,
+        "hidden": false,
+        "presentable": false,
+        "onCreate": true,
+        "onUpdate": false
+      }
+    ],
+    "indexes": [],
+    "system": true
+  },
+  {
+    "id": "pbc_268752357",
+    "name": "profile",
+    "type": "base",
+    "system": false,
+    "fields": [
+      {
+        "id": "text3208210256",
+        "name": "id",
+        "type": "text",
+        "required": true,
+        "system": true,
+        "hidden": false,
+        "presentable": true,
+        "primaryKey": true,
+        "autogeneratePattern": "[a-z0-9]{15}",
+        "min": 15,
+        "max": 15,
+        "pattern": "^[a-z0-9]+$"
+      },
+      {
+        "id": "text2849095986",
+        "name": "full_name",
+        "type": "text",
+        "required": true,
+        "system": false,
+        "hidden": false,
+        "presentable": false,
+        "primaryKey": false,
+        "autogeneratePattern": "",
+        "min": 0,
+        "max": 0,
+        "pattern": ""
+      },
+      {
+        "id": "text3356015194",
+        "name": "full_last_name",
+        "type": "text",
+        "required": true,
+        "system": false,
+        "hidden": false,
+        "presentable": false,
+        "primaryKey": false,
+        "autogeneratePattern": "",
+        "min": 0,
+        "max": 0,
+        "pattern": ""
+      },
+      {
+        "id": "select3343321666",
+        "name": "gender",
+        "type": "select",
+        "required": false,
+        "system": false,
+        "hidden": false,
+        "presentable": false,
+        "maxSelect": 1,
+        "values": ["male", "female", "other"]
+      },
+      {
+        "id": "number4122694739",
+        "name": "weigth",
+        "type": "number",
+        "required": false,
+        "system": false,
+        "hidden": false,
+        "presentable": false,
+        "onlyInt": false,
+        "min": null,
+        "max": null
+      },
+      {
+        "id": "number121365533",
+        "name": "heigth",
+        "type": "number",
+        "required": false,
+        "system": false,
+        "hidden": false,
+        "presentable": false,
+        "onlyInt": false,
+        "min": null,
+        "max": null
+      },
+      {
+        "id": "autodate997214191",
+        "name": "create_at",
+        "type": "autodate",
+        "required": false,
+        "system": false,
+        "hidden": false,
+        "presentable": false,
+        "onCreate": true,
+        "onUpdate": false
+      },
+      {
+        "id": "autodate16281821",
+        "name": "update_at",
+        "type": "autodate",
+        "required": false,
+        "system": false,
+        "hidden": false,
+        "presentable": false,
+        "onCreate": true,
+        "onUpdate": true
+      }
+    ],
+    "indexes": [],
+    "system": false
+  }
+]
