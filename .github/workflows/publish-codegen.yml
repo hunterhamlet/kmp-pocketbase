@@ -2,8 +2,13 @@ name: Publish Codegen Plugin to GitHub Packages
 
 on:
   push:
+    branches:
+      - develop
+      - main
     tags:
       - 'codegen-v*.*.*'
+    paths:
+      - 'codegen/build.gradle.kts'
   workflow_dispatch:
 
 jobs:
