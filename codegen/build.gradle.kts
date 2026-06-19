@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.hamon.kmp-pocketbase"
-version = "0.1.0-alpha02"
+version = "0.1.0-alpha03"
 
 kotlin {
     jvmToolchain(21)

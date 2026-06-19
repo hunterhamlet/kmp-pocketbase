@@ -74,7 +74,7 @@ dependencyResolutionManagement {
 
 ```kotlin
 dependencies {
-    implementation("com.hamon:kmp-pocketbase:0.1.0-alpha01")
+    implementation("com.hamon:kmp-pocketbase:0.1.0-alpha03")
 }
 ```
 
@@ -599,7 +599,7 @@ pluginManagement {
 ```kotlin
 // build.gradle.kts (your KMP module)
 plugins {
-    id("com.hamon.kmp-pocketbase.codegen") version "0.1.0-alpha01"
+    id("com.hamon.kmp-pocketbase.codegen") version "0.1.0-alpha03"
 }
 
 pocketbaseCodegen {
