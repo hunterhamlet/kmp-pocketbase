@@ -1,5 +1,6 @@
 package com.hamon.kmp_pocketbase.demo.posts
 
+import com.hamon.kmp_pocketbase.generated.PostsRecord
 import com.hamon.kmp_pocketbase.network.pocketbase.PocketBaseResult
 import com.hamon.kmp_pocketbase.network.pocketbase.dto.RecordModel
 import kotlinx.coroutines.Dispatchers
@@ -31,7 +32,7 @@ class PostsViewModelTest {
         id: String = "1",
         title: String = "T",
         content: String = "C",
-    ) = RecordModel(id = id, fields = Post(title = title, content = content))
+    ) = RecordModel(id = id, fields = PostsRecord(id = id, title = title, content = content, author = ""))
 
     private fun viewModel(repo: PostsRepository = FakePostsRepository()) = PostsViewModel(repo)
 
@@ -100,11 +101,11 @@ class PostsViewModelTest {
 }
 
 private class FakePostsRepository(
-    posts: List<RecordModel<Post>> = emptyList(),
-    private val getResult: PocketBaseResult<List<RecordModel<Post>>> = PocketBaseResult.Success(posts),
-    private val mutateResult: PocketBaseResult<RecordModel<Post>> =
+    posts: List<RecordModel<PostsRecord>> = emptyList(),
+    private val getResult: PocketBaseResult<List<RecordModel<PostsRecord>>> = PocketBaseResult.Success(posts),
+    private val mutateResult: PocketBaseResult<RecordModel<PostsRecord>> =
         PocketBaseResult.Success(
-            RecordModel(fields = Post()),
+            RecordModel(fields = PostsRecord(id = "", title = "", content = "", author = "")),
         ),
     private val deleteResult: PocketBaseResult<Unit> = PocketBaseResult.Success(Unit),
 ) : PostsRepository {

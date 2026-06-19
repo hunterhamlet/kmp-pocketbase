@@ -1,5 +1,6 @@
 package com.hamon.kmp_pocketbase.demo.posts
 
+import com.hamon.kmp_pocketbase.generated.PostsRecord
 import com.hamon.kmp_pocketbase.network.pocketbase.PocketBase
 import com.hamon.kmp_pocketbase.network.pocketbase.PocketBaseResult
 import com.hamon.kmp_pocketbase.network.pocketbase.dto.RecordModel
@@ -11,12 +12,12 @@ internal class PocketBasePostsRepository(
 ) : PostsRepository {
     private val service = pb.collection("posts")
 
-    override suspend fun getPosts(): PocketBaseResult<List<RecordModel<Post>>> = service.tryGetFullList()
+    override suspend fun getPosts(): PocketBaseResult<List<RecordModel<PostsRecord>>> = service.tryGetFullList()
 
     override suspend fun createPost(
         title: String,
         content: String,
-    ): PocketBaseResult<RecordModel<Post>> =
+    ): PocketBaseResult<RecordModel<PostsRecord>> =
         service.tryCreate(
             buildJsonObject {
                 put("title", title)
@@ -29,7 +30,7 @@ internal class PocketBasePostsRepository(
         id: String,
         title: String,
         content: String,
-    ): PocketBaseResult<RecordModel<Post>> =
+    ): PocketBaseResult<RecordModel<PostsRecord>> =
         service.tryUpdate(
             id,
             buildJsonObject {

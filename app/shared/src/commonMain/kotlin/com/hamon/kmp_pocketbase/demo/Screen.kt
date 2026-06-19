@@ -1,6 +1,6 @@
 package com.hamon.kmp_pocketbase.demo
 
-import com.hamon.kmp_pocketbase.demo.posts.Post
+import com.hamon.kmp_pocketbase.generated.PostsRecord
 import com.hamon.kmp_pocketbase.network.pocketbase.dto.RecordModel
 
 internal sealed class Screen {
@@ -11,7 +11,7 @@ internal sealed class Screen {
     object CreatePost : Screen()
 
     data class EditPost(
-        val post: RecordModel<Post>,
+        val post: RecordModel<PostsRecord>,
     ) : Screen()
 
     object Chat : Screen()

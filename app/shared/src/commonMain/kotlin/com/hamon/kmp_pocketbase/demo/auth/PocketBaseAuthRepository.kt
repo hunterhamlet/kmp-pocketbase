@@ -1,5 +1,6 @@
 package com.hamon.kmp_pocketbase.demo.auth
 
+import com.hamon.kmp_pocketbase.generated.UsersRecord
 import com.hamon.kmp_pocketbase.network.pocketbase.PocketBase
 import com.hamon.kmp_pocketbase.network.pocketbase.PocketBaseResult
 import com.hamon.kmp_pocketbase.network.pocketbase.dto.AuthResponse
@@ -17,13 +18,13 @@ internal class PocketBaseAuthRepository(
     override suspend fun login(
         email: String,
         password: String,
-    ): PocketBaseResult<AuthResponse<UserRecord>> = service.tryAuthWithPassword(email, password)
+    ): PocketBaseResult<AuthResponse<UsersRecord>> = service.tryAuthWithPassword(email, password)
 
     override suspend fun register(
         email: String,
         password: String,
         name: String,
-    ): PocketBaseResult<RecordModel<UserRecord>> =
+    ): PocketBaseResult<RecordModel<UsersRecord>> =
         service.tryCreate(
             buildJsonObject {
                 put("email", email)
@@ -33,7 +34,7 @@ internal class PocketBaseAuthRepository(
             },
         )
 
-    override suspend fun refresh(): PocketBaseResult<AuthResponse<UserRecord>> = service.tryAuthRefresh()
+    override suspend fun refresh(): PocketBaseResult<AuthResponse<UsersRecord>> = service.tryAuthRefresh()
 
     override suspend fun logout() {
         pb.authStore.clear()

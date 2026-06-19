@@ -1,5 +1,6 @@
 package com.hamon.kmp_pocketbase.demo.chat
 
+import com.hamon.kmp_pocketbase.generated.MessagesRecord
 import com.hamon.kmp_pocketbase.network.pocketbase.PocketBase
 import com.hamon.kmp_pocketbase.network.pocketbase.PocketBaseResult
 import com.hamon.kmp_pocketbase.network.pocketbase.dto.RecordModel
@@ -13,10 +14,10 @@ internal class PocketBaseChatRepository(
 ) : ChatRepository {
     private val service = pb.collection("messages")
 
-    override fun subscribeToMessages(): Flow<PocketBaseResult<RealtimeEvent<Message>>> =
-        service.subscribe<Message>(autoReconnect = true)
+    override fun subscribeToMessages(): Flow<PocketBaseResult<RealtimeEvent<MessagesRecord>>> =
+        service.subscribe<MessagesRecord>(autoReconnect = true)
 
-    override suspend fun sendMessage(text: String): PocketBaseResult<RecordModel<Message>> =
+    override suspend fun sendMessage(text: String): PocketBaseResult<RecordModel<MessagesRecord>> =
         service.tryCreate(
             buildJsonObject {
                 put("text", text)
@@ -24,5 +25,6 @@ internal class PocketBaseChatRepository(
             },
         )
 
-    override suspend fun getRecentMessages(): PocketBaseResult<List<RecordModel<Message>>> = service.tryGetFullList()
+    override suspend fun getRecentMessages(): PocketBaseResult<List<RecordModel<MessagesRecord>>> =
+        service.tryGetFullList()
 }

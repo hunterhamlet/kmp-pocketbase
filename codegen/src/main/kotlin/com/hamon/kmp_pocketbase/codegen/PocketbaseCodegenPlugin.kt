@@ -21,8 +21,10 @@ class PocketbaseCodegenPlugin : Plugin<Project> {
             task.generateParcelize.set(extension.generateParcelize)
         }
 
-        target.tasks.matching { it.name.startsWith("compile") && it.name.contains("Kotlin") }
-            .configureEach { it.dependsOn(generateTask) }
+        target.tasks.matching {
+            it.name.startsWith("compile") &&
+                (it.name.contains("Kotlin") || it.name == "compileAndroidMain")
+        }.configureEach { it.dependsOn(generateTask) }
 
         target.plugins.withId("org.jetbrains.kotlin.multiplatform") {
             val kmp = target.extensions.getByType(KotlinMultiplatformExtension::class.java)

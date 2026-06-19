@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.hamon.kmp_pocketbase.generated.PostsRecord
 import com.hamon.kmp_pocketbase.network.pocketbase.dto.RecordModel
 import kotlinx.coroutines.launch
 
@@ -12,7 +13,7 @@ internal sealed class PostsUiState {
     object Loading : PostsUiState()
 
     data class Success(
-        val posts: List<RecordModel<Post>>,
+        val posts: List<RecordModel<PostsRecord>>,
     ) : PostsUiState()
 
     data class Error(
@@ -80,7 +81,8 @@ internal class PostsViewModel(
             repo
                 .updatePost(id, title, content)
                 .onSuccess { updated ->
-                    val current = (postsState as? PostsUiState.Success)?.posts?.toMutableList() ?: mutableListOf()
+                    val current =
+                        (postsState as? PostsUiState.Success)?.posts?.toMutableList() ?: mutableListOf()
                     val idx = current.indexOfFirst { it.id == id }
                     if (idx >= 0) current[idx] = updated
                     postsState = PostsUiState.Success(current.toList())
@@ -95,7 +97,8 @@ internal class PostsViewModel(
             repo
                 .deletePost(id)
                 .onSuccess {
-                    val current = (postsState as? PostsUiState.Success)?.posts?.filter { it.id != id } ?: emptyList()
+                    val current =
+                        (postsState as? PostsUiState.Success)?.posts?.filter { it.id != id } ?: emptyList()
                     postsState = PostsUiState.Success(current)
                     actionState = PostActionState.Done
                 }.onFailure { actionState = PostActionState.Error(it.message ?: "Failed to delete post") }

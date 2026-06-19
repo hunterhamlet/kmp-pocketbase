@@ -40,7 +40,7 @@ package com.hamon.kmp_pocketbase.demo
 internal object AppConfig {
     const val POCKETBASE_URL = "$url"
 }
-            """.trimIndent(),
+            """.trimIndent() + "\n",
         )
     }
 }

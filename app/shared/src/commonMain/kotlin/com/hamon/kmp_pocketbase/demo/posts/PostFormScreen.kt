@@ -28,12 +28,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.hamon.kmp_pocketbase.demo.PocketBaseProvider
+import com.hamon.kmp_pocketbase.generated.PostsRecord
 import com.hamon.kmp_pocketbase.network.pocketbase.dto.RecordModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun PostFormScreen(
-    post: RecordModel<Post>?,
+    post: RecordModel<PostsRecord>?,
     onSave: () -> Unit,
     onBack: () -> Unit,
 ) {

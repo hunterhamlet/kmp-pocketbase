@@ -1,5 +1,6 @@
 package com.hamon.kmp_pocketbase.demo.auth
 
+import com.hamon.kmp_pocketbase.generated.UsersRecord
 import com.hamon.kmp_pocketbase.network.pocketbase.PocketBaseResult
 import com.hamon.kmp_pocketbase.network.pocketbase.dto.AuthResponse
 import com.hamon.kmp_pocketbase.network.pocketbase.dto.RecordModel
@@ -98,18 +99,26 @@ class AuthViewModelTest {
             assertIs<AuthUiState.Idle>(vm.uiState)
         }
 
-    private fun fakeUserRecord() = RecordModel(id = "1", fields = UserRecord(email = "user@test.com", name = "User"))
+    private fun fakeUserRecord() =
+        RecordModel(
+            id = "1",
+            fields = UsersRecord(id = "1", email = "user@test.com", name = "User"),
+        )
 
     private fun fakeAuthResponse() = AuthResponse(token = "tok", record = fakeUserRecord())
 }
 
 private class FakeAuthRepository(
-    private val loginResult: PocketBaseResult<AuthResponse<UserRecord>> =
-        PocketBaseResult.Success(AuthResponse("tok", RecordModel(fields = UserRecord()))),
-    private val registerResult: PocketBaseResult<RecordModel<UserRecord>> =
-        PocketBaseResult.Success(RecordModel(fields = UserRecord())),
-    private val refreshResult: PocketBaseResult<AuthResponse<UserRecord>> =
-        PocketBaseResult.Success(AuthResponse("tok", RecordModel(fields = UserRecord()))),
+    private val loginResult: PocketBaseResult<AuthResponse<UsersRecord>> =
+        PocketBaseResult.Success(
+            AuthResponse("tok", RecordModel(fields = UsersRecord(id = "", email = ""))),
+        ),
+    private val registerResult: PocketBaseResult<RecordModel<UsersRecord>> =
+        PocketBaseResult.Success(RecordModel(fields = UsersRecord(id = "", email = ""))),
+    private val refreshResult: PocketBaseResult<AuthResponse<UsersRecord>> =
+        PocketBaseResult.Success(
+            AuthResponse("tok", RecordModel(fields = UsersRecord(id = "", email = ""))),
+        ),
 ) : AuthRepository {
     override var isLoggedIn = false
         private set

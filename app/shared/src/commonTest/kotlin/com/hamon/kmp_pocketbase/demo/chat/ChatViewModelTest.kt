@@ -1,5 +1,6 @@
 package com.hamon.kmp_pocketbase.demo.chat
 
+import com.hamon.kmp_pocketbase.generated.MessagesRecord
 import com.hamon.kmp_pocketbase.network.pocketbase.PocketBaseResult
 import com.hamon.kmp_pocketbase.network.pocketbase.dto.RecordModel
 import com.hamon.kmp_pocketbase.network.pocketbase.realtime.RealtimeEvent
@@ -31,7 +32,8 @@ class ChatViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun message(id: String = "1") = RecordModel(id = id, fields = Message(text = "Hi", author = "User"))
+    private fun message(id: String = "1") =
+        RecordModel(id = id, fields = MessagesRecord(id = id, text = "Hi", author = "User"))
 
     private fun viewModel(repo: ChatRepository = FakeChatRepository()) = ChatViewModel(repo)
 
@@ -69,13 +71,13 @@ class ChatViewModelTest {
 }
 
 private class FakeChatRepository(
-    messages: List<RecordModel<Message>> = emptyList(),
-    private val getResult: PocketBaseResult<List<RecordModel<Message>>> = PocketBaseResult.Success(messages),
-    private val sendResult: PocketBaseResult<RecordModel<Message>> =
+    messages: List<RecordModel<MessagesRecord>> = emptyList(),
+    private val getResult: PocketBaseResult<List<RecordModel<MessagesRecord>>> = PocketBaseResult.Success(messages),
+    private val sendResult: PocketBaseResult<RecordModel<MessagesRecord>> =
         PocketBaseResult.Success(
-            RecordModel(fields = Message()),
+            RecordModel(fields = MessagesRecord(id = "", text = "", author = "")),
         ),
-    private val events: Flow<PocketBaseResult<RealtimeEvent<Message>>> = emptyFlow(),
+    private val events: Flow<PocketBaseResult<RealtimeEvent<MessagesRecord>>> = emptyFlow(),
 ) : ChatRepository {
     override fun subscribeToMessages() = events
 

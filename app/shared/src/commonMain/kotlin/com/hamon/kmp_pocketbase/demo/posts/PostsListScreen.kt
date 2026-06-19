@@ -28,13 +28,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.hamon.kmp_pocketbase.demo.PocketBaseProvider
+import com.hamon.kmp_pocketbase.generated.PostsRecord
 import com.hamon.kmp_pocketbase.network.pocketbase.dto.RecordModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun PostsListScreen(
     onCreatePost: () -> Unit,
-    onEditPost: (RecordModel<Post>) -> Unit,
+    onEditPost: (RecordModel<PostsRecord>) -> Unit,
     onChat: () -> Unit,
     onLogout: () -> Unit,
 ) {
@@ -102,7 +103,7 @@ internal fun PostsListScreen(
 
 @Composable
 private fun PostCard(
-    record: RecordModel<Post>,
+    record: RecordModel<PostsRecord>,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
 ) {

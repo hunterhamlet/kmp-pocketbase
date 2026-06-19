@@ -11,10 +11,10 @@ import androidx.compose.runtime.setValue
 import com.hamon.kmp_pocketbase.demo.PocketBaseProvider
 import com.hamon.kmp_pocketbase.demo.Screen
 import com.hamon.kmp_pocketbase.demo.auth.AuthScreen
-import com.hamon.kmp_pocketbase.demo.auth.UserRecord
 import com.hamon.kmp_pocketbase.demo.chat.ChatScreen
 import com.hamon.kmp_pocketbase.demo.posts.PostFormScreen
 import com.hamon.kmp_pocketbase.demo.posts.PostsListScreen
+import com.hamon.kmp_pocketbase.generated.UsersRecord
 import com.hamon.kmp_pocketbase.network.pocketbase.PocketBaseResult
 import kotlinx.coroutines.launch
 
@@ -27,7 +27,7 @@ fun App() {
     LaunchedEffect(Unit) {
         pb.awaitReady()
         if (pb.authStore.isValid) {
-            val result = pb.collection("users").tryAuthRefresh<UserRecord>()
+            val result = pb.collection("users").tryAuthRefresh<UsersRecord>()
             if (result is PocketBaseResult.Success) {
                 currentScreen = Screen.Posts
             } else {

@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.hamon.kmp_pocketbase.generated.MessagesRecord
 import com.hamon.kmp_pocketbase.network.pocketbase.dto.RecordModel
 import com.hamon.kmp_pocketbase.network.pocketbase.realtime.RealtimeAction
 import kotlinx.coroutines.flow.launchIn
@@ -15,7 +16,7 @@ internal sealed class ChatUiState {
     object Loading : ChatUiState()
 
     data class Ready(
-        val messages: List<RecordModel<Message>>,
+        val messages: List<RecordModel<MessagesRecord>>,
     ) : ChatUiState()
 
     data class Error(
