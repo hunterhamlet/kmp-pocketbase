@@ -2,6 +2,7 @@ rootProject.name = "kmp-pocketbase"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {
+    includeBuild("codegen")
     repositories {
         google {
             mavenContent {
