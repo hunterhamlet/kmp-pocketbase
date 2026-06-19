@@ -35,7 +35,19 @@ jobs:
         run: ./gradlew -p codegen test
 
       - name: Publish to GitHub Packages
-        run: ./gradlew -p codegen publishAllPublicationsToGitHubPackagesRepository
         env:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          output=$(./gradlew -p codegen publishAllPublicationsToGitHubPackagesRepository 2>&1)
+          exit_code=$?
+          echo "$output"
+          if [ $exit_code -ne 0 ]; then
+            if echo "$output" | grep -q "409\|Conflict"; then
+              echo ""
+              echo "⚠️  Publication skipped: this version is already published in GitHub Packages."
+              echo "    To release a new version, bump the version in codegen/build.gradle.kts."
+              exit 0
+            fi
+            exit $exit_code
+          fi
