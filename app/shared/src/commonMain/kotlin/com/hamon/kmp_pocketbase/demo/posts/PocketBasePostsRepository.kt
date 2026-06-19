@@ -1,5 +1,6 @@
 package com.hamon.kmp_pocketbase.demo.posts
 
+import com.hamon.kmp_pocketbase.generated.PocketbaseCollection
 import com.hamon.kmp_pocketbase.generated.PostsRecord
 import com.hamon.kmp_pocketbase.network.pocketbase.PocketBase
 import com.hamon.kmp_pocketbase.network.pocketbase.PocketBaseResult
@@ -10,7 +11,7 @@ import kotlinx.serialization.json.put
 internal class PocketBasePostsRepository(
     private val pb: PocketBase,
 ) : PostsRepository {
-    private val service = pb.collection("posts")
+    private val service = pb.collection(PocketbaseCollection.posts)
 
     override suspend fun getPosts(): PocketBaseResult<List<RecordModel<PostsRecord>>> = service.tryGetFullList()
 

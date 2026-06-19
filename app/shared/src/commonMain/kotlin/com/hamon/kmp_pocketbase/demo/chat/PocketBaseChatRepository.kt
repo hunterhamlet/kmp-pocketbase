@@ -1,6 +1,7 @@
 package com.hamon.kmp_pocketbase.demo.chat
 
 import com.hamon.kmp_pocketbase.generated.MessagesRecord
+import com.hamon.kmp_pocketbase.generated.PocketbaseCollection
 import com.hamon.kmp_pocketbase.network.pocketbase.PocketBase
 import com.hamon.kmp_pocketbase.network.pocketbase.PocketBaseResult
 import com.hamon.kmp_pocketbase.network.pocketbase.dto.RecordModel
@@ -12,7 +13,7 @@ import kotlinx.serialization.json.put
 internal class PocketBaseChatRepository(
     private val pb: PocketBase,
 ) : ChatRepository {
-    private val service = pb.collection("messages")
+    private val service = pb.collection(PocketbaseCollection.messages)
 
     override fun subscribeToMessages(): Flow<PocketBaseResult<RealtimeEvent<MessagesRecord>>> =
         service.subscribe<MessagesRecord>(autoReconnect = true)

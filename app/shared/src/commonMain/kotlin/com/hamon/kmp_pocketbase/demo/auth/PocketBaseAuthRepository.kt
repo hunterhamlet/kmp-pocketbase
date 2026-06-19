@@ -1,5 +1,6 @@
 package com.hamon.kmp_pocketbase.demo.auth
 
+import com.hamon.kmp_pocketbase.generated.PocketbaseCollection
 import com.hamon.kmp_pocketbase.generated.UsersRecord
 import com.hamon.kmp_pocketbase.network.pocketbase.PocketBase
 import com.hamon.kmp_pocketbase.network.pocketbase.PocketBaseResult
@@ -11,7 +12,7 @@ import kotlinx.serialization.json.put
 internal class PocketBaseAuthRepository(
     private val pb: PocketBase,
 ) : AuthRepository {
-    private val service = pb.collection("users")
+    private val service = pb.collection(PocketbaseCollection.users)
 
     override val isLoggedIn: Boolean get() = pb.authStore.isValid
 
