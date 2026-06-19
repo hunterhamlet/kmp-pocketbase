@@ -74,7 +74,19 @@ internal class ModelGeneratorTest {
         // account (auth) + profile (base) = 2 records
         // profile has gender select = 1 enum
         // parcelize shim = 1
-        // total = 4
-        assertEquals(4, output.commonFiles.size)
+        // collection names object = 1
+        // total = 5
+        assertEquals(5, output.commonFiles.size)
+    }
+
+    @Test
+    fun `generates PocketbaseCollection object`() {
+        val output = ModelGenerator("com.example").generate(collections)
+        val collectionNames = output.commonFiles.first { it.name == "PocketbaseCollection" }
+        assertTrue(collectionNames.content.contains("object PocketbaseCollection"))
+        assertTrue(collectionNames.content.contains("val account"))
+        assertTrue(collectionNames.content.contains(""""account""""))
+        assertTrue(collectionNames.content.contains("val profile"))
+        assertTrue(collectionNames.content.contains(""""profile""""))
     }
 }

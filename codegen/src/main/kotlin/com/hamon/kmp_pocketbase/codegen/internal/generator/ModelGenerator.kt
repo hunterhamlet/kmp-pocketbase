@@ -11,6 +11,7 @@ internal class ModelGenerator(
     private val typeMapper = TypeMapper()
     private val enumGenerator = EnumGenerator()
     private val dataClassGenerator = DataClassGenerator(typeMapper, generateParcelize)
+    private val collectionNamesGenerator = CollectionNamesGenerator()
 
     fun generate(collections: List<CollectionSchema>): GeneratedOutput {
         val targets = if (excludeSystemCollections) collections.filter { !it.system } else collections
@@ -26,6 +27,8 @@ internal class ModelGenerator(
                 }
             commonFiles.add(dataClassGenerator.generate(packageName, schema))
         }
+
+        commonFiles.add(collectionNamesGenerator.generate(packageName, targets))
 
         val shims = if (generateParcelize) ParcelableShimGenerator.generate(packageName) else emptyMap()
 
