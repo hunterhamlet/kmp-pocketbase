@@ -20,3 +20,4 @@ node_modules/
 .acam/
 .claude/
 CLAUDE.md
+pb_schema.json

@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinSerialization)
+    id("com.hamon.kmp-pocketbase.codegen")
 }
 
 val localProps =
@@ -126,4 +127,11 @@ kotlin {
 
 dependencies {
     androidRuntimeClasspath(libs.compose.uiTooling)
+}
+
+pocketbaseCodegen {
+    schemaFile = rootProject.file("pb_schema.json")
+    packageName.set("com.hamon.kmp_pocketbase.generated")
+    generateParcelize.set(false)
+    excludeSystemCollections.set(true)
 }
